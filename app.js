@@ -1356,6 +1356,7 @@ function setStudentFilter(filter){State.studentFilter=filter;renderPage()}
 function setTeacherFilter(filter){State.teacherFilter=filter;renderPage()}
 function selectedStudent(){return (State.db.students||[]).find(x=>x.id===State.selectedStudentId)||null}
 function selectedStudentListItem(){return (State.db.students||[]).find(x=>x.id===State.studentListSelectedId)||null}
+function openStudent(id){const s=(State.db.students||[]).find(x=>x.id===id);if(!s)return toast('Aluno não encontrado.');State.selectedStudentId=s.id;State.studentListSelectedId=s.id;State.studentTab='profile';renderPage()}
 function selectStudentRow(id,rowKey=''){const same=State.studentListSelectedId===id&&State.studentListSelectedRowKey===rowKey;State.studentListSelectedId=same?'':id;State.studentListSelectedRowKey=same?'':rowKey;renderPage()}
 function editSelectedStudent(){const s=selectedStudentListItem();if(!s)return toast('Selecione um aluno primeiro.');editStudentCleanTopTabs(s.id)}
 function confirmDeleteSelectedStudent(){const s=selectedStudentListItem();if(!s)return toast('Selecione um aluno primeiro.');modal(`<div class="modal-head"><div><span class="eyebrow">Alunos</span><h3>Excluir aluno</h3></div><button class="modal-close" onclick="App.closeModal()">×</button></div><p class="muted">Tem certeza que deseja excluir este aluno?</p><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Cancelar</button><button class="btn danger" onclick="App.deleteSelectedStudentConfirmed()">Confirmar exclusão</button></div>`,true)}
