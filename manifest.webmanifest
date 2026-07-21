@@ -1,0 +1,13 @@
+{
+  "name": "Purple Gestão",
+  "short_name": "Purple Gestão",
+  "description": "Relatórios, dashboards e planos de ação da Purple Idiomas.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8f5fb",
+  "theme_color": "#5f16a5",
+  "icons": [
+    {"src":"assets/brand/icon-purple-gestao-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"assets/brand/icon-purple-gestao-512.png","sizes":"512x512","type":"image/png","purpose":"any"}
+  ]
+}
