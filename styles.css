@@ -1152,3 +1152,66 @@ th{font-size:9px}
   #modalRoot .classes-editor .modal-head{min-height:29px!important}
   #modalRoot .classes-editor .section-actions .btn{min-height:31px!important;height:31px!important}
 }
+
+/* Turmas: densidade da tela principal, grade e feriados. */
+@media(min-width:761px){
+  .classes-page{padding:16px 20px 28px!important}
+  .classes-page .section-title{margin-bottom:8px!important;align-items:center!important}
+  .classes-page .section-title h2{font-size:21px!important;line-height:1.1!important}
+  .classes-page .section-title p{margin-top:2px!important;line-height:1.25!important}
+  .classes-page>.grid.cols-4{gap:10px!important;margin-bottom:8px!important}
+  .classes-page>.grid.cols-4 .metric-card{
+    min-height:104px!important;
+    height:104px!important;
+    padding:11px 13px!important;
+    gap:3px!important;
+    border-radius:15px!important;
+  }
+  .classes-page .metric-top{min-height:30px!important}
+  .classes-page .metric-icon{width:31px!important;height:31px!important;border-radius:9px!important}
+  .classes-page .trend{padding:3px 6px!important;font-size:8px!important}
+  .classes-page .metric-card .label{margin:3px 0 1px!important;font-size:9.5px!important}
+  .classes-page .metric-card .value{font-size:19px!important;line-height:1!important}
+  .classes-page .metric-card .note{margin-top:1px!important;font-size:9px!important}
+  .classes-page>.field{margin-bottom:5px!important}
+  .classes-page>.field input{height:36px!important;min-height:36px!important;padding:7px 11px!important}
+  .classes-page>.student-erp-tabs{
+    min-height:42px!important;
+    margin:5px 0 8px!important;
+    padding:4px!important;
+    border-radius:14px!important;
+  }
+  .classes-page>.student-erp-tabs button{padding:7px 11px!important;font-size:11px!important}
+  .classes-page .student-detail-grid{gap:8px!important}
+  .classes-page .student-detail-grid>.form-card{
+    padding:10px 12px!important;
+    border-radius:15px!important;
+  }
+  .classes-page .student-detail-grid>.form-card .section-title{margin:0 0 7px!important}
+  .classes-page .student-detail-grid>.form-card .section-title h3{font-size:15px!important}
+  .classes-page .student-detail-grid>.form-card .section-title p{font-size:9.5px!important}
+  .classes-page .student-detail-grid .table-wrap{border-radius:11px!important}
+  .classes-page .student-detail-grid table th{
+    padding:7px 10px!important;
+    font-size:8.5px!important;
+  }
+  .classes-page .student-detail-grid table td{
+    padding:6px 10px!important;
+    height:39px!important;
+    font-size:10px!important;
+  }
+  .classes-page .student-detail-grid .table-actions{gap:5px!important}
+  .classes-page .student-detail-grid .table-actions .btn{
+    min-height:29px!important;
+    height:29px!important;
+    padding:4px 9px!important;
+    font-size:9.5px!important;
+  }
+  .classes-page .student-detail-grid>.form-card>.mini-card{padding:8px!important}
+}
+
+@media(max-width:760px){
+  .classes-page .student-detail-grid>.form-card{padding:10px!important}
+  .classes-page .student-detail-grid table th,
+  .classes-page .student-detail-grid table td{padding:7px 9px!important;font-size:10px!important}
+}
