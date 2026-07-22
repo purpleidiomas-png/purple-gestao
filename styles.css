@@ -1006,7 +1006,7 @@ th{font-size:9px}
   .sidebar{
     position:fixed!important;
     top:0!important;
-    left:0!important;
+    left:calc(var(--sidebar) * -1)!important;
     height:100vh!important;
     max-height:100vh!important;
     display:flex!important;
@@ -1017,7 +1017,58 @@ th{font-size:9px}
     overflow-y:auto!important;
     overflow-x:hidden!important;
     padding-bottom:20px!important;
+    z-index:1000!important;
   }
+  .sidebar.open{left:0!important}
   .main-area{margin-left:0!important}
   .app-shell.hidden{display:none!important}
+}
+
+/* Turmas — formulário denso no desktop e navegação segura no celular. */
+@media(min-width:761px){
+  .classes-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 8px}
+  .classes-editor>.modal-head,.classes-editor>.form-grid,.classes-editor>.section-actions{grid-column:1/-1}
+  .classes-editor>.form-card{margin:0;min-width:0}
+  .classes-editor>.form-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px 7px}
+  .classes-editor>.form-grid>.field{margin:0}
+  .classes-editor .form-card>.form-grid{gap:5px}
+  .classes-editor .form-card .mini-card{margin:0}
+  .classes-editor .form-card .field{margin-bottom:3px}
+  .classes-editor .form-card .muted{margin:3px 0 0!important}
+  .classes-editor .section-actions{margin-top:0;padding-top:5px}
+  .classes-editor .modal-head{margin:0}
+  .classes-editor .modal-head h3{font-size:16px;line-height:1.1}
+}
+
+@media(max-width:760px){
+  .topbar{position:sticky;z-index:40}
+  .mobile-menu{display:grid!important;flex:0 0 38px}
+  .classes-page{padding:12px 10px 30px!important}
+  .classes-page .section-title{gap:9px;margin-bottom:9px}
+  .classes-page .section-title h2{font-size:20px}
+  .classes-page .grid.cols-4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .classes-page .metric-card{min-height:94px;padding:10px}
+  .classes-page .metric-card .label{margin:5px 0 2px}
+  .classes-page .student-erp-tabs{overflow-x:auto;flex-wrap:nowrap}
+  .classes-page .list-card-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .classes-page .list-card .badge{min-width:76px;height:34px;padding:0 10px;font-size:14px}
+  .classes-editor{display:block}
+  .classes-editor .modal-head{position:sticky;top:0;z-index:4;background:#fff;padding-bottom:6px}
+  .classes-editor>.form-grid.cols-2,.classes-editor .form-grid.cols-2,.classes-editor .form-grid.cols-3{grid-template-columns:1fr}
+  .classes-editor #classBlock1Wrap[style*="grid-column: 1 / -1"]{padding-left:0;padding-right:0}
+  .classes-editor #classBlock1Wrap[style*="grid-column: 1 / -1"] .form-grid.cols-3{grid-template-columns:1fr;max-width:none}
+  .classes-editor .section-actions{position:sticky;bottom:0;display:grid;grid-template-columns:1fr 1fr;padding:8px 0 2px;background:#fff}
+  .classes-editor .section-actions .btn{width:100%}
+  .classes-editor .form-card{padding:9px;margin-bottom:6px}
+  .classes-editor .mini-card{padding:8px}
+  .classes-editor .field input,.classes-editor .field select,.classes-editor .field textarea{min-height:38px;font-size:13px}
+  .classes-editor .field label{font-size:10px}
+  .classes-editor .modal{max-height:calc(100dvh - 16px)}
+}
+
+@media(max-width:420px){
+  .sidebar{width:min(86vw,var(--sidebar))!important;left:-86vw!important}
+  .sidebar.open{left:0!important}
+  .classes-page .grid.cols-4{grid-template-columns:1fr 1fr!important}
+  .classes-page .metric-card{min-height:88px}
 }
