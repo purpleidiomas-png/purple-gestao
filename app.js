@@ -1,8 +1,8 @@
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const AUTH_CONFIG=window.PurpleAuthConfig||{};
-const APP_VERSION=AUTH_CONFIG.appVersion||'1.10.8-uppercase-inputs';
-const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v147';
+const APP_VERSION=AUTH_CONFIG.appVersion||'1.10.9-turmas-fix';
+const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v156';
 const MANIFEST_VERSION=AUTH_CONFIG.manifestVersion||document.querySelector('link[rel="manifest"]')?.getAttribute('href')||'manifest.webmanifest';
 const SUPABASE_URL=AUTH_CONFIG.supabaseUrl||'https://qqlymzyvvgmbyuhswipp.supabase.co';
 const SUPABASE_KEY=AUTH_CONFIG.supabaseKey||'sb_publishable_3E5BMGRcfKRt0MBFXPTfwg_lexboTMm';
@@ -153,6 +153,12 @@ const ICONS={
   '♜':'<path d="M6.5 17.8h11"/><path d="M7.4 15.2 6.6 7.6l3.5 3.3L12 6l1.9 4.9 3.5-3.3-.8 7.6z"/>'
 };
 function appIcon(name,label=''){const paths=ICONS[name]||'';if(!paths)return escapeHTML(String(name||''));return `<svg class="pg-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img">${paths}</svg>${label?`<span class="sr-only">${escapeHTML(label)}</span>`:''}`}
+
+function safeCatalogList(...keys){for(const key of keys){const list=State?.db?.[key];if(Array.isArray(list))return list}return []}
+function catalogLabelById(id,keys=['classes'],labelFields=['name','title','label','courseName']){if(!id)return '—';const list=safeCatalogList(...keys);const found=list.find(item=>String(item?.id||item?.key||item?.code||'')===String(id));if(!found)return '—';for(const field of labelFields){const value=found?.[field];if(value)return String(value)}return String(found?.name||found?.title||found?.label||found?.code||'—')}
+function classLabelById(id){return catalogLabelById(id,['classes','turmas'],['name','title','label'])}
+function teacherLabelById(id){return catalogLabelById(id,['teachers','professors','users'],['name','fullName','displayName','title'])}
+function bookLabelById(id){return catalogLabelById(id,['books','library','inventory'],['name','title','bookName','label'])}
 
 const SCHEMAS={
 retencao:{

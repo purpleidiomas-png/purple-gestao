@@ -13,9 +13,9 @@ assert(index.includes('core/ui-service.js'), 'index.html deve carregar core/ui-s
 assert(sw.includes('core/supabase-service.js'), 'service worker deve versionar core/supabase-service.js');
 assert(sw.includes('core/ui-service.js'), 'service worker deve versionar core/ui-service.js');
 assert(sw.includes('networkFirst(request)'), 'service worker deve usar network-first para arquivos críticos');
-assert(config.includes('purple-gestao-v147'), 'auth/config.js deve apontar para cache v147');
-assert(app.includes('purple-gestao-v147'), 'app.js deve apontar para cache v147');
-assert(index.includes('app.js?v=145'), 'index.html deve apontar para app v145');
-assert(index.includes('styles.css?v=79'), 'index.html deve apontar para styles v79');
+assert(config.includes('purple-gestao-v156'), 'auth/config.js deve apontar para cache v156');
+assert(app.includes('purple-gestao-v156'), 'app.js deve apontar para cache v156');
+assert(index.includes('app.js?v=156'), 'index.html deve apontar para app v156');
+assert(index.includes('styles.css?v=80'), 'index.html deve apontar para styles v80');
 
 console.log('bootstrap/cache smoke test ok');

@@ -1,6 +1,6 @@
 const CACHE_PREFIX='purple-gestao-';
-const CACHE='purple-gestao-v155';
-const ASSETS=['./','./index.html','./styles.css?v=80','./auth/config.js?v=42','./assets/vendor/supabase-js-2.min.js','./core/supabase-service.js?v=3','./core/permissions-service.js?v=1','./core/system-status.js?v=1','./core/ui-service.js?v=1','./auth/bootstrap.js?v=11','./app.js?v=154','./manifest.webmanifest','./assets/brand/purple-gestao-light.png','./assets/brand/purple-gestao-dark.png','./assets/brand/purple-gestao-symbol.png','./assets/brand/icon-purple-gestao-192.png','./assets/brand/icon-purple-gestao-512.png','./assets/brand/apple-touch-icon.png','./assets/brand/favicon.ico'];
+const CACHE='purple-gestao-v156';
+const ASSETS=['./','./index.html','./styles.css?v=80','./auth/config.js?v=43','./assets/vendor/supabase-js-2.min.js','./core/supabase-service.js?v=3','./core/permissions-service.js?v=1','./core/system-status.js?v=1','./core/ui-service.js?v=1','./auth/bootstrap.js?v=12','./app.js?v=156','./manifest.webmanifest','./assets/brand/purple-gestao-light.png','./assets/brand/purple-gestao-dark.png','./assets/brand/purple-gestao-symbol.png','./assets/brand/icon-purple-gestao-192.png','./assets/brand/icon-purple-gestao-512.png','./assets/brand/apple-touch-icon.png','./assets/brand/favicon.ico'];
 const CRITICAL=/\/(?:index\.html|app\.js|styles\.css|auth\/config\.js|auth\/bootstrap\.js|core\/.*\.js)(?:\?|$)/;
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
