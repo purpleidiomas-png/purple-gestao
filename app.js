@@ -1,8 +1,8 @@
 'use strict';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const AUTH_CONFIG=window.PurpleAuthConfig||{};
-const APP_VERSION=AUTH_CONFIG.appVersion||'1.10.15-finance-central';
-const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v159';
+const APP_VERSION=AUTH_CONFIG.appVersion||'1.10.16-finance-bootstrap-fix';
+const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v160';
 const MANIFEST_VERSION=AUTH_CONFIG.manifestVersion||document.querySelector('link[rel="manifest"]')?.getAttribute('href')||'manifest.webmanifest';
 const SUPABASE_URL=AUTH_CONFIG.supabaseUrl||'https://qqlymzyvvgmbyuhswipp.supabase.co';
 const SUPABASE_KEY=AUTH_CONFIG.supabaseKey||'sb_publishable_3E5BMGRcfKRt0MBFXPTfwg_lexboTMm';
@@ -2410,7 +2410,7 @@ window.AppDiagnostics=showDiagnostics;
     }
     if(!State.user){
       const cached=readLocalSessionCache();
-      if(cached?.user?.active!==false){
+      if(cached?.user&&cached.user.active!==false){
         State.user=cached.user;
         State.sector=cached.sector||cached.user.sector||'integrado';
         State.db=State.db||defaultDB();
