@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/apple-touch-icon.png" />
-  <link rel="stylesheet" href="styles.css?v=83" />
+  <link rel="stylesheet" href="styles.css?v=187" />
   <title>Purple Gestão</title>
 </head>
 <body>
@@ -49,26 +49,27 @@
     <aside id="sidebar" class="sidebar">
       <div class="sidebar-head">
         <div class="sidebar-brand-lockup">
-          <img src="assets/brand/purple-gestao-light.png" alt="purple Gestão" class="sidebar-logo" />
+          <img src="assets/brand/purple-gestao-light.png" alt="purple Gestão" class="sidebar-logo sidebar-logo-full" />
+          <img src="assets/brand/purple-gestao-symbol.png" alt="" class="sidebar-logo sidebar-logo-symbol" aria-hidden="true" />
           <span>Plataforma Oficial de Gestão Interna</span>
         </div>
-        <button class="icon-btn close-sidebar" onclick="App.toggleSidebar()" aria-label="Fechar menu">×</button>
+        <button class="icon-btn close-sidebar" type="button" onclick="App.toggleSidebar(false)" aria-label="Fechar menu"><span id="sidebarCloseIcon" aria-hidden="true"></span></button>
       </div>
       <div class="nav-label">Gestão</div>
-      <button class="sidebar-mode-toggle" onclick="App.toggleSidebarMode()" title="Alternar modo do menu"><span id="sidebarModeIcon">⇤</span><b id="sidebarModeLabel">Modo Fixo</b></button>
       <nav id="mainNav" class="main-nav"></nav>
       <div class="sidebar-grow"></div>
       <div class="sidebar-user">
         <div id="userAvatar" class="user-avatar">D</div>
         <div><b id="userName">Direção</b><span id="userAccess">Acesso geral</span></div>
       </div>
-      <button class="sidebar-logout" onclick="App.logout()">Sair da conta</button>
+      <button class="sidebar-logout" type="button" onclick="App.logout()" aria-label="Sair da conta" data-tooltip="Sair da conta"><span id="sidebarLogoutIcon" aria-hidden="true"></span><span class="sidebar-logout-label">Sair</span></button>
     </aside>
+    <button class="sidebar-backdrop" type="button" onclick="App.toggleSidebar(false)" aria-label="Fechar navegação"></button>
 
     <main class="main-area">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="icon-btn mobile-menu" onclick="App.toggleSidebar()" aria-label="Abrir menu">☰</button>
+          <button class="icon-btn mobile-menu" type="button" onclick="App.toggleSidebar()" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false"><span id="mobileMenuIcon" aria-hidden="true"></span></button>
           <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Visão geral dos indicadores</p></div>
         </div>
         <div class="topbar-actions">
@@ -77,7 +78,7 @@
             <option value="pedagogico">Pedagógico</option>
             <option value="financeiro">Financeiro</option>
           </select>
-          <button class="icon-btn notification-btn" onclick="App.go('notifications')" aria-label="Notificações">🔔<span id="notificationCount">0</span></button>
+          <button class="icon-btn notification-btn" type="button" onclick="App.go('notifications')" aria-label="Notificações"><span id="notificationIcon" aria-hidden="true"></span><span id="notificationCount">0</span></button>
           <button id="globalPrintButton" class="btn ghost desktop-only" onclick="App.printCurrentPage()">Imprimir</button>
         </div>
       </header>
@@ -87,13 +88,16 @@
 
   <div id="modalRoot"></div>
   <div id="toast" class="toast"></div>
-  <script src="auth/config.js?v=43"></script>
+  <script src="auth/config.js?v=59"></script>
   <script src="assets/vendor/supabase-js-2.min.js"></script>
   <script src="core/supabase-service.js?v=3"></script>
   <script src="core/permissions-service.js?v=1"></script>
   <script src="core/system-status.js?v=1"></script>
   <script src="core/ui-service.js?v=1"></script>
-  <script src="auth/bootstrap.js?v=12"></script>
-  <script src="app.js?v=158"></script>
+  <script src="auth/bootstrap.js?v=13"></script>
+  <script src="modules/financial-center.js?v=2"></script>
+  <script src="modules/lesson-plans.js?v=9"></script>
+  <script src="app.js?v=189"></script>
+  <script src="modules/book-production.js?v=10"></script>
 </body>
 </html>

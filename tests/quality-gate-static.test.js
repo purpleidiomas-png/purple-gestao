@@ -3,6 +3,8 @@ const fs=require('node:fs');
 
 const app=fs.readFileSync('app.js','utf8');
 const html=fs.readFileSync('index.html','utf8');
+const lessonPlans=fs.readFileSync('modules/lesson-plans.js','utf8');
+const importSchema=fs.readFileSync('docs/LESSON_PLANS_PURPLE_IMPORT_SCHEMA_V1.md','utf8');
 const source=`${html}\n${app}`;
 
 const appRefs=[...source.matchAll(/App\.([A-Za-z0-9_]+)/g)].map(match=>match[1]);
@@ -32,5 +34,26 @@ assert(app.includes('whatsapp.view'), 'WhatsApp deve possuir permissão de visua
 assert(app.includes('whatsapp.reply'), 'WhatsApp deve possuir permissão de resposta.');
 assert(app.includes('whatsapp.manage'), 'WhatsApp deve possuir permissão de conexão.');
 assert(!app.includes('web.whatsapp.com'), 'WhatsApp não deve ser incorporado via WhatsApp Web/iframe.');
+assert(html.includes('modules/lesson-plans.js'), 'Lesson Plans deve ser carregado como módulo integrado do app original.');
+assert(app.includes('lesson_plans.view'), 'Lesson Plans deve possuir permissão explícita.');
+assert(app.includes("teacherAllowedPages"), 'Professor deve possuir restrição real de navegação.');
+assert(lessonPlans.includes('collections'), 'Lesson Plans deve suportar coleções como primeiro nível.');
+assert(lessonPlans.includes('Purple Way'), 'Lesson Plans deve migrar dados para a coleção Purple Way.');
+assert(lessonPlans.includes('Livro digital'), 'Lesson Plans deve possuir contexto de livro digital.');
+assert(lessonPlans.includes('Recursos da aula'), 'Lesson Plans deve destacar recursos da aula.');
+assert(lessonPlans.includes('Gestão de planejamentos'), 'Dashboard administrativo deve existir como camada de gestão.');
+assert(lessonPlans.includes('Como a Purple ensina.'), 'Biblioteca deve ser a experiência principal, não o dashboard administrativo.');
+assert(lessonPlans.includes('Capas e livros digitais'), 'Gestão deve incluir operação de capas e PDFs dos livros.');
+assert(lessonPlans.includes('Subir capa'), 'Painel de gestor deve oferecer fluxo visual para capa.');
+assert(lessonPlans.includes('Zoom da capa'), 'Painel de gestor deve permitir ajuste de enquadramento da capa.');
+assert(lessonPlans.includes('Subir arquivo'), 'Professor autorizado deve conseguir iniciar upload de arquivos em recursos.');
+assert(lessonPlans.includes('uploadResourceAsset'), 'Upload de recurso deve tentar storage seguro antes de depender de URL manual.');
+assert(lessonPlans.includes('pdfStoragePath'), 'Livro digital deve persistir caminho seguro do PDF, não apenas URL temporária.');
+assert(lessonPlans.includes('signedStorageUrl'), 'Viewer deve gerar URL assinada atualizada ao abrir PDF do Storage.');
+assert(lessonPlans.includes('connectRealBatch'), 'Lesson Plans deve importar o primeiro lote real Connect Units 01-03.');
+assert(lessonPlans.includes('meetingArcs'), 'Lesson Plans deve suportar Transition Meeting com Learning Arcs.');
+assert(lessonPlans.includes('Teacher Quick View'), 'Lesson Plans deve ter visão rápida para professor usar em aula.');
+assert(importSchema.includes('lesson-plans-purple-import-v1'), 'Contrato de importação v1 deve estar documentado.');
+assert(importSchema.includes('Duplicate Protection'), 'Contrato v1 deve descrever proteção contra duplicidade.');
 
 console.log('quality gate static test ok');
