@@ -1,1 +1,7 @@
 .vercel
+.DS_Store
+node_modules/
+tmp/
+.codex-audit-shots/
+supabase/.temp/
+supabase/.DS_Store

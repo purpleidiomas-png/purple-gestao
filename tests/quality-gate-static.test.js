@@ -53,6 +53,11 @@ assert(lessonPlans.includes('signedStorageUrl'), 'Viewer deve gerar URL assinada
 assert(lessonPlans.includes('connectRealBatch'), 'Lesson Plans deve importar o primeiro lote real Connect Units 01-03.');
 assert(lessonPlans.includes('meetingArcs'), 'Lesson Plans deve suportar Transition Meeting com Learning Arcs.');
 assert(lessonPlans.includes('Teacher Quick View'), 'Lesson Plans deve ter visão rápida para professor usar em aula.');
+assert(lessonPlans.includes('basePdf'), 'Lesson Plans deve suportar Plano Base Purple em PDF por Lesson.');
+assert(lessonPlans.includes('Atividades Extras'), 'Lesson deve separar atividades extras do Plano Base oficial.');
+assert(lessonPlans.includes('Links & Mídia'), 'Lesson deve separar links e mídia dos PDFs internos.');
+assert(lessonPlans.includes('assertFile'), 'Uploads de Lesson Plans devem validar tipo, extensão, tamanho e arquivo vazio.');
+assert(lessonPlans.includes('PurpleWriteLessonPlansCache?.();return true'), 'Cache local de Lesson Plans deve ser atualizado somente após persistência confirmada.');
 assert(importSchema.includes('lesson-plans-purple-import-v1'), 'Contrato de importação v1 deve estar documentado.');
 assert(importSchema.includes('Duplicate Protection'), 'Contrato v1 deve descrever proteção contra duplicidade.');
 

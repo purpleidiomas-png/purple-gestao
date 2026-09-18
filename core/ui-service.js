@@ -10,11 +10,12 @@
     clearTimeout(timers.get(target));
     timers.set(target,setTimeout(()=>target.classList.remove('show'),options.duration||2600));
   }
-  function modal(content,small=false){
+  function modal(content,small=false,options={}){
     const root=document.getElementById('modalRoot');
     if(!root)return;
     document.body.classList.add('modal-open');
-    root.innerHTML=`<div class="modal-backdrop" onclick="if(event.target===this)App.closeModal()"><div class="modal ${small?'small':''}">${content}</div></div>`;
+    const locked=options?.locked===true;
+    root.innerHTML=`<div class="modal-backdrop ${locked?'locked':''}" ${locked?'':'onclick="if(event.target===this)App.closeModal()"'}><div class="modal ${small?'small':''}">${content}</div></div>`;
   }
   function closeModal(){
     const root=document.getElementById('modalRoot');

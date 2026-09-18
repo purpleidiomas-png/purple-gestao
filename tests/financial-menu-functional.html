@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Teste funcional — menu financeiro individual</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:24px;color:#211629}.student-financial-history{display:grid;gap:8px;overflow:visible}.student-financial-history-row{display:grid;grid-template-columns:minmax(190px,1.45fr) minmax(96px,.62fr) minmax(125px,.72fr) minmax(100px,.58fr) auto;gap:10px;align-items:center;padding:11px 12px;border:1px solid #e8dfef;border-radius:14px;background:#fff}.table-actions{display:flex;gap:6px;justify-content:flex-end}.btn{border:1px solid #e8dfef;border-radius:10px;background:#fff;padding:8px 10px;cursor:pointer}.student-financial-popover{position:absolute;z-index:9999;display:grid;gap:4px;width:240px;padding:7px;border:1px solid #e8dfef;border-radius:14px;background:#fff;box-shadow:0 22px 70px rgba(32,7,44,.24)}.student-financial-popover button{border:0;border-radius:10px;background:#fff;padding:10px 11px;text-align:left;cursor:pointer}.student-financial-popover button:hover{background:#f4eafb}.danger{color:#b42318}@media(max-width:760px){.student-financial-history-row{grid-template-columns:1fr 1fr}.student-financial-history-row .title,.student-financial-history-row .table-actions{grid-column:1/-1}}@media(max-width:460px){.student-financial-history-row{grid-template-columns:1fr}.student-financial-history-row .table-actions{justify-content:space-between}}
+  </style>
+</head>
+<body>
+  <main id="root"></main>
+  <script>
+    const State={studentFinancialMenuOpenId:''};
+    const rows=[
+      {id:'asaas-open',description:'MENSALIDADE SETEMBRO',asaas:true,paid:false,link:true,pix:true},
+      {id:'manual-open',description:'MATERIAL DIDÁTICO · 1/6',asaas:false,paid:false},
+      {id:'paid-row',description:'MENSALIDADE AGOSTO',asaas:true,paid:true,link:true}
+    ];
+    function actions(item){const a=[['details','Detalhes']];if(!item.paid)a.push(['edit','Editar parcela']);if(item.link)a.push(['openCharge','Ver cobrança'],['copyLink','Copiar link']);if(item.pix)a.push(['viewPix','Copiar PIX / QR PIX']);a.push(['copyCode','Copiar código']);if(!item.paid&&!item.asaas)a.push(['recordPayment','Registrar pagamento'],['archive','Excluir registro','danger']);if(!item.paid&&item.asaas)a.push(['cancel','Cancelar cobrança','danger']);if(item.paid)a.push(['locked','Pagamento protegido']);return a}
+    function render(){document.querySelector('#root').innerHTML='<section class="student-financial-history">'+rows.map(r=>'<article class="student-financial-history-row"><div class="title"><strong>'+r.description+'</strong><br><small>1/6 · Mensalidade</small></div><div><small>Vencimento</small><br><b>20/09/2026</b></div><div><small>Devido agora</small><br><b>R$ 295,00</b></div><div><span>EM ABERTO</span></div><div class="table-actions"><button class="btn" data-financial-menu-action="details" data-financial-id="'+r.id+'">Detalhes</button><button class="btn" data-financial-menu-trigger data-financial-menu-id="'+r.id+'" aria-expanded="false">⋯</button></div></article>').join('')+'</section>'}
+    function closeMenu(){document.querySelector('.student-financial-popover')?.remove();State.studentFinancialMenuOpenId='';document.querySelectorAll('[data-financial-menu-trigger]').forEach(b=>b.setAttribute('aria-expanded','false'))}
+    function position(pop,b){const rect=b.getBoundingClientRect(),pad=10,width=240,height=pop.offsetHeight||260;let left=Math.min(innerWidth-width-pad,Math.max(pad,rect.right-width)),top=rect.bottom+8;if(top+height>innerHeight-pad)top=Math.max(pad,rect.top-height-8);pop.style.left=(left+scrollX)+'px';pop.style.top=(top+scrollY)+'px'}
+    function openMenu(button){const id=button.dataset.financialMenuId,item=rows.find(r=>r.id===id);closeMenu();const pop=document.createElement('div');pop.className='student-financial-popover';pop.setAttribute('role','menu');pop.innerHTML=actions(item).map(([act,label,tone])=>'<button data-financial-menu-action="'+act+'" data-financial-id="'+id+'" class="'+(tone||'')+'" '+(act==='locked'?'disabled':'')+'>'+label+'</button>').join('');document.body.appendChild(pop);State.studentFinancialMenuOpenId=id;button.setAttribute('aria-expanded','true');position(pop,button)}
+    function toggleMenu(button){State.studentFinancialMenuOpenId===button.dataset.financialMenuId?closeMenu():openMenu(button)}
+    document.addEventListener('click',event=>{const trigger=event.target.closest?.('[data-financial-menu-trigger]');if(trigger){event.preventDefault();event.stopPropagation();return toggleMenu(trigger)}const action=event.target.closest?.('[data-financial-menu-action]');if(action){window.lastAction=action.dataset.financialMenuAction;closeMenu();return}if(!event.target.closest?.('.student-financial-popover'))closeMenu()});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')closeMenu()});
+    window.addEventListener('scroll',()=>{const id=State.studentFinancialMenuOpenId,button=document.querySelector('[data-financial-menu-id="'+id+'"]'),popover=document.querySelector('.student-financial-popover');if(id&&button&&popover)position(popover,button)},true);
+    window.render=render;
+    render();
+  </script>
+</body>
+</html>

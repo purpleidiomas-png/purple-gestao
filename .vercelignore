@@ -1,0 +1,8 @@
+.git
+.DS_Store
+node_modules
+tests
+scripts
+supabase
+docs
+tmp
