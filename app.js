@@ -2876,12 +2876,15 @@ async function toggleSetting(key){if(State.user.role!=='direction')return toast(
 function defaultPermissions(role,sector){const all=Object.values(PERMISSION_GROUPS).flat().map(x=>x[0]);if(role==='direction')return Object.fromEntries(all.map(k=>[k,true]));const base=['panel.view','settings.view'];if(role==='viewer')base.push('reports.view','indicators.view','mural.view','whatsapp.view','inventory.view','assets.view');if(role==='teacher')base.push('twr.view.own','classes.view','lesson_plans.view');if(role==='leader')base.push('reports.view','reports.create','reports.edit','reports.export','indicators.view','tasks.view','tasks.create','tasks.edit','tasks.delete','pulse.view','pulse.answer','mural.view','meetings.view','cases.view','actions.view','actions.create','actions.edit','students.view','classes.view','teachers.view','whatsapp.view','whatsapp.reply','inventory.view','inventory.issue','inventory.return','twr.manage','twr.submit.own','class_opening.manage','lesson_plans.view','lesson_plans.edit');if(role==='leader'&&sector==='pedagogico')base.push('twr.approve','lesson_plans.review','lesson_plans.publish','lesson_plans.ai','lesson_plans.cycles.manage');if(role==='leader'&&sector==='financeiro')base.push('financial.receipts.view','financial.payments.view','financial.receivables.view','financial.payables.view','financial.bank_accounts.view','financial.balances.view','financial.transactions.create','financial.transactions.edit','financial.transactions.delete','financial.export','inventory.create','inventory.edit','inventory.entry','inventory.adjust','inventory.inactivate','inventory.export','assets.view','assets.export');return Object.fromEntries(all.map(k=>[k,base.includes(k)]))}
 function accessProfiles(){
   const settings=State.db.settings||{};
-  if(!Array.isArray(settings.userAccessProfiles)||!settings.userAccessProfiles.length)settings.userAccessProfiles=[
+  const defaults=[
     {id:'profile-professor-basic',name:'Professor básico',description:'Acesso essencial para rotina do professor, TWR, turmas e Biblioteca.',role:'teacher',sector:'pedagogico',accessScope:'own_sector',permissions:defaultPermissions('teacher','pedagogico')},
+    {id:'profile-professor-twr-team',name:'Professor coordenação TWR',description:'Professor(a) que acompanha horários de todos os teachers sem permissão para limpar/criar atividades.',role:'teacher',sector:'pedagogico',accessScope:'own_sector',permissions:{...defaultPermissions('teacher','pedagogico'),'teachers.view':true,'twr.manage':false,'twr.approve':false}},
     {id:'profile-professor-library',name:'Professor + Biblioteca ativa',description:'Professor com consulta e contribuição nos Lesson Plans.',role:'teacher',sector:'pedagogico',accessScope:'own_sector',permissions:{...defaultPermissions('teacher','pedagogico'),'lesson_plans.edit':true,'mural.view':true}},
     {id:'profile-coord-pedagogica',name:'Coordenação pedagógica',description:'Gestão pedagógica, TWR e publicação/revisão de Lesson Plans.',role:'leader',sector:'pedagogico',accessScope:'own_sector',permissions:defaultPermissions('leader','pedagogico')},
     {id:'profile-financeiro',name:'Financeiro operacional',description:'Rotina financeira, estoque de livros e relatórios financeiros.',role:'leader',sector:'financeiro',accessScope:'own_sector',permissions:defaultPermissions('leader','financeiro')}
   ];
+  if(!Array.isArray(settings.userAccessProfiles))settings.userAccessProfiles=[];
+  defaults.forEach(profile=>{if(!settings.userAccessProfiles.some(item=>item.id===profile.id))settings.userAccessProfiles.push(profile)});
   settings.userAccessProfiles=settings.userAccessProfiles.map(profile=>({...profile,permissions:validPermissionObject(profile.permissions)?profile.permissions:defaultPermissions(profile.role,profile.sector),accessScope:profile.accessScope||profile.access_scope||'own_sector'}));
   return settings.userAccessProfiles;
 }
@@ -2893,6 +2896,7 @@ function teacherAccessDesigner(permissions){
   const cards=[
     ['panel.view','Início','Painel inicial e avisos do professor.'],
     ['twr.view.own','Meu TWR','Rotina semanal, sala e próximos compromissos.'],
+    ['teachers.view','TWR da equipe','Mostra horários de todos os teachers, sem liberar criação ou exclusão.'],
     ['classes.view','Minhas turmas','Turmas, horários e contexto pedagógico.'],
     ['lesson_plans.view','Biblioteca pedagógica','Coleções, livros, unidades, recursos e contribuições.'],
     ['lesson_plans.edit','Editar planos','Permite entrar em modo edição quando autorizado.'],

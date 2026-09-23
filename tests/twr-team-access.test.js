@@ -42,6 +42,15 @@ global.PurpleAuthConfig={appVersion:'test',serviceWorkerVersion:'test-cache',man
 vm.runInThisContext(fs.readFileSync('app.js','utf8'),{filename:'app.js'});
 
 const state=global.PurpleState;
+state.user={id:'u-dir',name:'Direção QA',email:'direcao@purple.test',role:'direction',sector:'all',accessScope:'all_sectors',permissions:{'users.view':true,'users.edit':true,'panel.view':true},active:true};
+global.App.go('users');
+const usersHtml=getElement('pageContainer').innerHTML;
+assert(usersHtml.includes('Professor coordenação TWR'),'Direção deve ter um perfil pronto para liberar professor com visão TWR da equipe.');
+global.App.editUser();
+const modalHtml=getElement('modalRoot').innerHTML;
+assert(modalHtml.includes('TWR da equipe'),'Editor de usuário deve expor o acesso de equipe do TWR como opção clara.');
+global.App.closeModal();
+
 const permissions={
   'panel.view':true,
   'twr.view.own':false,
