@@ -165,7 +165,7 @@ Deno.serve(async (request) => {
 
   let profile = previous
   if (Object.keys(changes).length) {
-    const { data, error: profileError } = await callerDb.from('profiles').update(changes).eq('id', userId).select().single()
+    const { data, error: profileError } = await admin.from('profiles').update(changes).eq('id', userId).select().single()
     if (profileError) return json({ error: `Não foi possível atualizar o perfil: ${profileError.message}`, code: profileError.code }, 400)
     profile = data
   }
@@ -174,7 +174,7 @@ Deno.serve(async (request) => {
     if (authError) {
       if (Object.keys(changes).length && previous) {
         const rollback = Object.fromEntries(Object.keys(changes).map(key => [key, previous?.[key]]))
-        const { error: rollbackError } = await callerDb.from('profiles').update(rollback).eq('id', userId)
+        const { error: rollbackError } = await admin.from('profiles').update(rollback).eq('id', userId)
         if (rollbackError) console.error('profile_rollback_failed', rollbackError.message)
       }
       return json({ error: /already|registered|exists/i.test(authError.message) ? 'Este e-mail já está cadastrado no acesso de outro usuário.' : `Não foi possível atualizar a autenticação: ${authError.message}` }, 400)

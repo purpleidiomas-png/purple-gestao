@@ -47,8 +47,9 @@ state.sector='integrado';
 
 (async()=>{
 global.fetch=async (url,options={})=>{
-  if(String(url).includes('/api/evolution?action=config'))return {ok:true,status:200,json:async()=>({configured:false,missing:['EVOLUTION_API_URL','EVOLUTION_API_KEY'],instanceName:'purple-gestao'})};
-  return {ok:false,status:502,json:async()=>({error:'Evolution API não configurada',missing:['EVOLUTION_API_URL','EVOLUTION_API_KEY']})};
+  if(String(url).includes('/api/evolution?action=config'))return {ok:true,status:200,json:async()=>({configured:false,provider:'WhatsApp Cloud API',missing:['META_WHATSAPP_PHONE_NUMBER_ID','META_WHATSAPP_ACCESS_TOKEN']})};
+  if(String(options.body||'').includes('"action":"sendText"'))return {ok:true,status:200,json:async()=>({configured:true,provider:'WhatsApp Cloud API',sent:true,status:'sent',externalId:'wamid.qa'})};
+  return {ok:false,status:502,json:async()=>({error:'WhatsApp Cloud API não configurada',missing:['META_WHATSAPP_PHONE_NUMBER_ID','META_WHATSAPP_ACCESS_TOKEN']})};
 };
 
 global.App.go('whatsapp');
@@ -56,6 +57,7 @@ let html=getElement('pageContainer').innerHTML;
 assert(html.includes('Central de Atendimento')&&html.includes('Conversas'), 'Central de Atendimento deve abrir como área única de trabalho.');
 assert(html.includes('Aluno / contato')&&html.includes('Digite sua resposta...'), 'Central deve priorizar lista, chat e painel do contato.');
 assert(html.includes('Conectar WhatsApp')&&html.includes('Financeiro')&&html.includes('Follow-up'), 'MVP deve focar conexão, resposta e consulta rápida.');
+assert(!html.includes('QR Code'), 'Central oficial não deve depender de QR Code/WhatsApp Web.');
 assert(!html.includes('Campanhas')&&!html.includes('Automações'), 'MVP não deve destacar automações ou campanhas na rotina da equipe.');
 
 for(const tab of ['connections','conversations','templates']){
@@ -85,7 +87,7 @@ await global.App.sendWhatsAppMessage();
 assert.strictEqual((state.whatsappMessages||[]).length,before+1,'Enviar deve registrar mensagem na conversa da sessão.');
 
 await global.App.whatsappConnectionAction('connect');
-assert((state.whatsappConnection.missing||[]).includes('EVOLUTION_API_KEY'),'Conexão deve informar variáveis faltantes da Evolution API.');
+assert((state.whatsappConnection.missing||[]).includes('META_WHATSAPP_ACCESS_TOKEN'),'Conexão deve informar variáveis faltantes da Cloud API.');
 global.App.openWhatsAppDrawer('financial');
 assert(getElement('pageContainer').innerHTML.includes('Financeiro do contato'),'Drawer financeiro deve abrir sem sair da Central.');
 global.App.openWhatsAppDrawer('details');

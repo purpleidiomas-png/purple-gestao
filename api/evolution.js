@@ -1,23 +1,15 @@
-const REQUIRED_ENV=['EVOLUTION_API_URL','EVOLUTION_API_KEY'];
+const REQUIRED_ENV=[
+  'META_WHATSAPP_PHONE_NUMBER_ID',
+  'META_WHATSAPP_ACCESS_TOKEN',
+  'META_WHATSAPP_BUSINESS_ACCOUNT_ID',
+  'META_WHATSAPP_WEBHOOK_VERIFY_TOKEN'
+];
 
 function json(res,status,body){
   res.statusCode=status;
   res.setHeader('Content-Type','application/json; charset=utf-8');
   res.end(JSON.stringify(body));
 }
-
-function configured(){
-  const missing=REQUIRED_ENV.filter(key=>!process.env[key]);
-  return {
-    ok:missing.length===0,
-    missing,
-    apiUrl:process.env.EVOLUTION_API_URL||'',
-    apiKey:process.env.EVOLUTION_API_KEY||'',
-    instanceName:process.env.EVOLUTION_INSTANCE_NAME||'purple-gestao'
-  };
-}
-
-function cleanBase(url){return String(url||'').replace(/\/+$/,'')}
 
 async function readBody(req){
   if(req.body&&typeof req.body==='object')return req.body;
@@ -28,40 +20,56 @@ async function readBody(req){
   try{return JSON.parse(raw)}catch{return {}}
 }
 
-async function evolutionFetch(paths,{method='GET',body,apiUrl,apiKey}={}){
-  const base=cleanBase(apiUrl);
-  let lastError=null;
-  for(const path of paths){
-    const url=`${base}${path.startsWith('/')?path:`/${path}`}`;
-    try{
-      const response=await fetch(url,{
-        method,
-        headers:{apikey:apiKey,'Content-Type':'application/json'},
-        body:body?JSON.stringify(body):undefined
-      });
-      const text=await response.text();
-      let data=null;
-      try{data=text?JSON.parse(text):null}catch{data={raw:text}}
-      if(response.ok)return {ok:true,status:response.status,data,url};
-      lastError={ok:false,status:response.status,data,url};
-    }catch(error){
-      lastError={ok:false,status:0,data:{message:error.message},url};
-    }
-  }
-  return lastError||{ok:false,status:500,data:{message:'Evolution API indisponível'}};
+function configured(){
+  const missing=REQUIRED_ENV.filter(key=>!process.env[key]);
+  return {
+    ok:missing.length===0,
+    missing,
+    provider:'WhatsApp Cloud API',
+    phoneNumberId:process.env.META_WHATSAPP_PHONE_NUMBER_ID||'',
+    businessAccountId:process.env.META_WHATSAPP_BUSINESS_ACCOUNT_ID||'',
+    graphVersion:process.env.META_GRAPH_VERSION||'v20.0'
+  };
 }
 
-function normalizeStatus(data){
-  const instance=data?.instance||data;
-  const state=data?.state||data?.connectionState||instance?.state||instance?.status||data?.status||'Desconhecido';
-  const number=data?.number||instance?.number||instance?.ownerJid||'';
+async function metaFetch(path,{method='GET',body}={}){
+  const cfg=configured();
+  const base=`https://graph.facebook.com/${cfg.graphVersion}`;
+  const response=await fetch(`${base}${path.startsWith('/')?path:`/${path}`}`,{
+    method,
+    headers:{
+      Authorization:`Bearer ${process.env.META_WHATSAPP_ACCESS_TOKEN}`,
+      'Content-Type':'application/json'
+    },
+    body:body?JSON.stringify(body):undefined
+  });
+  const text=await response.text();
+  let data=null;
+  try{data=text?JSON.parse(text):null}catch{data={raw:text}}
+  if(response.ok)return {ok:true,status:response.status,data};
+  return {ok:false,status:response.status,data};
+}
+
+function normalizePhone(value){
+  const digits=String(value||'').replace(/\D/g,'');
+  if(!digits)return '';
+  if(digits.length===10||digits.length===11)return `55${digits}`;
+  return digits;
+}
+
+function connectionStatus(data,cfg){
+  const phone=data?.display_phone_number||data?.verified_name||cfg.phoneNumberId;
   return {
-    raw:data,
-    status:String(state),
-    connected:/open|connected|connectado|conectado/i.test(String(state)),
-    device:instance?.profileName||instance?.device||data?.device||'WhatsApp Business',
-    number:number||'Não informado',
-    lastSync:new Date().toISOString()
+    configured:true,
+    provider:cfg.provider,
+    status:data?.code_verification_status||data?.quality_rating||'Configurado',
+    connected:Boolean(cfg.phoneNumberId&&process.env.META_WHATSAPP_ACCESS_TOKEN),
+    device:data?.verified_name||'WhatsApp Business Platform',
+    number:phone||'Phone Number ID configurado',
+    businessAccountId:cfg.businessAccountId,
+    phoneNumberId:cfg.phoneNumberId,
+    lastSync:new Date().toISOString(),
+    raw:data||null
   };
 }
 
@@ -71,90 +79,54 @@ module.exports=async function handler(req,res){
   const requestedAction=body.action||req.query?.action||'config';
 
   if(requestedAction==='config'){
-    return json(res,200,{configured:cfg.ok,missing:cfg.missing,instanceName:cfg.instanceName});
+    return json(res,200,{configured:cfg.ok,missing:cfg.missing,provider:cfg.provider,phoneNumberId:cfg.phoneNumberId,businessAccountId:cfg.businessAccountId});
   }
   if(!cfg.ok){
-    return json(res,200,{configured:false,missing:cfg.missing,error:'Evolution API não configurada no ambiente da Vercel.'});
+    return json(res,200,{configured:false,missing:cfg.missing,provider:cfg.provider,error:'WhatsApp Cloud API não configurada no ambiente.'});
   }
-
-  const instance=cfg.instanceName;
-  const common={apiUrl:cfg.apiUrl,apiKey:cfg.apiKey};
 
   if(req.method==='GET'&&requestedAction==='status'){
-    const result=await evolutionFetch([
-      `/instance/connectionState/${encodeURIComponent(instance)}`,
-      `/instance/${encodeURIComponent(instance)}/status`
-    ],common);
-    if(!result.ok)return json(res,502,{configured:true,error:'Não foi possível consultar o status da Evolution API.',details:result});
-    return json(res,200,{configured:true,instanceName:instance,...normalizeStatus(result.data)});
-  }
-
-  if(req.method==='GET'&&requestedAction==='qrcode'){
-    const result=await evolutionFetch([
-      `/instance/connect/${encodeURIComponent(instance)}`,
-      `/instance/${encodeURIComponent(instance)}/qrcode`
-    ],common);
-    if(!result.ok)return json(res,502,{configured:true,error:'Não foi possível obter o QR Code.',details:result});
-    return json(res,200,{configured:true,instanceName:instance,qrcode:result.data?.qrcode||result.data,raw:result.data});
+    const result=await metaFetch(`/${encodeURIComponent(cfg.phoneNumberId)}?fields=display_phone_number,verified_name,quality_rating,code_verification_status`);
+    if(!result.ok)return json(res,502,{configured:true,provider:cfg.provider,error:'Não foi possível consultar o status da WhatsApp Cloud API.',details:result});
+    return json(res,200,connectionStatus(result.data,cfg));
   }
 
   if(req.method!=='POST')return json(res,405,{error:'Método não permitido.'});
 
   if(requestedAction==='connect'||requestedAction==='reconnect'){
-    const origin=req.headers.origin||(process.env.VERCEL_URL?`https://${process.env.VERCEL_URL}`:'');
-    const result=await evolutionFetch(['/instance/create'],{
-      ...common,
-      method:'POST',
-      body:{
-        instanceName:instance,
-        qrcode:true,
-        integration:'WHATSAPP-BAILEYS',
-        number:body.number||undefined,
-        webhook:origin?{
-          enabled:true,
-          url:`${origin.replace(/\/+$/,'')}/api/evolution-webhook`,
-          events:['QRCODE_UPDATED','MESSAGES_UPSERT','SEND_MESSAGE','CONNECTION_UPDATE']
-        }:undefined
-      }
+    return json(res,200,{
+      ...connectionStatus(null,cfg),
+      status:'Configuração validada. Configure o webhook no painel da Meta.',
+      webhookPath:'/api/evolution-webhook'
     });
-    if(!result.ok)return json(res,502,{configured:true,error:'Não foi possível criar/reconectar a instância.',details:result});
-    return json(res,200,{configured:true,instanceName:instance,status:'connecting',qrcode:result.data?.qrcode,raw:result.data});
   }
 
   if(requestedAction==='disconnect'){
-    const result=await evolutionFetch([
-      `/instance/logout/${encodeURIComponent(instance)}`,
-      `/instance/delete/${encodeURIComponent(instance)}`,
-      `/instance/${encodeURIComponent(instance)}`
-    ],{...common,method:'DELETE'});
-    if(!result.ok)return json(res,502,{configured:true,error:'Não foi possível desconectar a instância.',details:result});
-    return json(res,200,{configured:true,instanceName:instance,disconnected:true,raw:result.data});
+    return json(res,400,{configured:true,provider:cfg.provider,error:'A Cloud API oficial não possui logout por sessão. Revogue o token ou remova o número no painel da Meta.'});
   }
 
   if(requestedAction==='sendText'){
-    const number=String(body.number||'').replace(/\D/g,'');
+    const number=normalizePhone(body.number);
     const text=String(body.text||'').trim();
     if(!number||!text)return json(res,400,{error:'Número e texto são obrigatórios.'});
-    const result=await evolutionFetch([`/message/sendText/${encodeURIComponent(instance)}`],{
-      ...common,
+    const result=await metaFetch(`/${encodeURIComponent(cfg.phoneNumberId)}/messages`,{
       method:'POST',
-      body:{number,textMessage:{text},delay:0,linkPreview:true}
+      body:{messaging_product:'whatsapp',recipient_type:'individual',to:number,type:'text',text:{preview_url:true,body:text}}
     });
-    if(!result.ok)return json(res,502,{configured:true,error:'Não foi possível enviar a mensagem.',details:result});
-    return json(res,200,{configured:true,sent:true,raw:result.data});
+    if(!result.ok)return json(res,502,{configured:true,provider:cfg.provider,error:'Não foi possível enviar a mensagem pela Cloud API.',details:result});
+    return json(res,200,{configured:true,provider:cfg.provider,sent:true,status:'sent',externalId:result.data?.messages?.[0]?.id||null,raw:result.data});
   }
 
-  if(requestedAction==='sendMedia'){
-    const number=String(body.number||'').replace(/\D/g,'');
-    const media=String(body.media||'');
-    if(!number||!media)return json(res,400,{error:'Número e arquivo são obrigatórios.'});
-    const result=await evolutionFetch([`/message/sendMedia/${encodeURIComponent(instance)}`],{
-      ...common,
+  if(requestedAction==='sendTemplate'){
+    const number=normalizePhone(body.number),name=String(body.templateName||'').trim(),language=body.language||'pt_BR';
+    if(!number||!name)return json(res,400,{error:'Número e template aprovado são obrigatórios.'});
+    const components=Array.isArray(body.components)?body.components:[];
+    const result=await metaFetch(`/${encodeURIComponent(cfg.phoneNumberId)}/messages`,{
       method:'POST',
-      body:{number,mediatype:body.mediatype||'document',mimetype:body.mimetype||'application/octet-stream',caption:body.caption||'',media,fileName:body.fileName||'arquivo'}
+      body:{messaging_product:'whatsapp',to:number,type:'template',template:{name,language:{code:language},components}}
     });
-    if(!result.ok)return json(res,502,{configured:true,error:'Não foi possível enviar o arquivo.',details:result});
-    return json(res,200,{configured:true,sent:true,raw:result.data});
+    if(!result.ok)return json(res,502,{configured:true,provider:cfg.provider,error:'Não foi possível enviar o template pela Cloud API.',details:result});
+    return json(res,200,{configured:true,provider:cfg.provider,sent:true,status:'sent',externalId:result.data?.messages?.[0]?.id||null,raw:result.data});
   }
 
   return json(res,400,{error:'Ação não reconhecida.'});
