@@ -5215,3 +5215,96 @@ body:has(.turma-workspace){
 .turma-workspace>.turma-topline.compact-class-head:after{
   display:none!important;
 }
+
+/* Turmas > Cronograma: one natural page scroll, no nested vertical viewport. */
+.turma-workspace,
+.turma-workspace .turma-schedule-premium,
+.turma-workspace .turma-schedule-premium .meeting-classroom-panel,
+.turma-workspace .turma-schedule-premium .meeting-classroom-grid,
+.turma-workspace .turma-schedule-premium .meeting-content-pane,
+.turma-workspace .turma-schedule-premium .meeting-students-pane,
+.turma-workspace .turma-schedule-premium .meeting-students-pane .attendance-list,
+.turma-workspace .turma-schedule-premium .schedule-timeline,
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact{
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+  overflow-y:visible!important;
+}
+
+/* TWR: normal pages use the document scroll. Only horizontal board overflow is allowed. */
+.twr-reference-page,
+.twr-reference-page.teacher,
+.twr-reference-page .twr-planner-layout,
+.twr-reference-page.teacher .twr-planner-layout,
+.twr-reference-page .twr-planner-layout>div,
+.twr-reference-page .twr-week-columns,
+.twr-reference-page .twr-day-board,
+.twr-reference-page .twr-day-stack,
+.twr-reference-page .twr-summary-rail,
+.twr-reference-page .twr-director-layout,
+.twr-reference-page .twr-director-layout>div,
+.twr-reference-page .twr-director-board,
+.twr-reference-page .twr-director-board-by-day,
+.twr-reference-page .twr-director-day-board,
+.twr-reference-page .twr-director-day-stack,
+.twr-reference-page .twr-director-side,
+.twr-reference-page .twr-list-panel,
+.twr-reference-page .twr-month-grid,
+.twr-reference-page .twr-find-grid{
+  height:auto!important;
+  max-height:none!important;
+  overflow-y:visible!important;
+}
+
+.twr-reference-page .twr-planner-layout,
+.twr-reference-page.teacher .twr-planner-layout,
+.twr-reference-page .twr-planner-layout>div,
+.twr-reference-page .twr-day-board,
+.twr-reference-page .twr-day-stack,
+.twr-reference-page .twr-director-layout,
+.twr-reference-page .twr-director-layout>div,
+.twr-reference-page .twr-director-board,
+.twr-reference-page .twr-director-board-by-day,
+.twr-reference-page .twr-director-day-board,
+.twr-reference-page .twr-director-day-stack,
+.twr-reference-page .twr-director-side{
+  overflow:visible!important;
+}
+
+.twr-reference-page .twr-day-board,
+.twr-reference-page .twr-director-day-board{
+  align-self:start!important;
+  min-height:0!important;
+}
+
+.twr-reference-page .twr-day-stack,
+.twr-reference-page .twr-director-day-stack{
+  padding-right:0!important;
+}
+
+.twr-reference-page .twr-week-columns{
+  overflow:visible!important;
+  overflow-x:visible!important;
+  overflow-y:visible!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-inline:contain;
+}
+
+@media(max-width:1024px) and (min-width:769px){
+  .twr-reference-page .twr-week-columns{
+    overflow-x:auto!important;
+    overflow-y:visible!important;
+  }
+}
+
+@media(max-width:768px){
+  .twr-reference-page .twr-week-columns{
+    overflow-x:visible!important;
+  }
+}
+
+.main-area{
+  overflow-y:visible!important;
+  overflow-x:clip!important;
+}
