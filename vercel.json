@@ -2,6 +2,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
+    {"source": "/", "has": [{"type":"host","value":"rapid.purpleidiomas.com.br"}], "destination": "/rapid/index.html"},
+    {"source": "/rapid", "destination": "/rapid/index.html"},
+    {"source": "/rapid/", "destination": "/rapid/index.html"},
     {"source": "/alunos", "destination": "/index.html"},
     {"source": "/dashboard", "destination": "/index.html"},
     {"source": "/financeiro", "destination": "/index.html"},
@@ -16,6 +19,12 @@
     },
     {
       "source": "/index.html",
+      "headers": [
+        {"key":"Cache-Control","value":"public, max-age=0, must-revalidate"}
+      ]
+    },
+    {
+      "source": "/rapid/index.html",
       "headers": [
         {"key":"Cache-Control","value":"public, max-age=0, must-revalidate"}
       ]

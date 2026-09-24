@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0711" />
+  <meta name="description" content="R.A.P.I.D. Teacher Certification — treinamento oficial da Purple Idiomas." />
+  <link rel="icon" href="/assets/brand/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/rapid/rapid.css?v=1" />
+  <title>R.A.P.I.D. Teacher Certification • Purple Idiomas</title>
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+  <div id="toast" class="rapid-toast" role="status" aria-live="polite"></div>
+
+  <main id="rapidLogin" class="rapid-login">
+    <section class="login-visual">
+      <div class="brand-lockup">
+        <img src="/assets/brand/purple-gestao-symbol.png" alt="" aria-hidden="true" />
+        <div><b>Purple Academy</b><span>Teacher Development</span></div>
+      </div>
+      <div class="login-copy">
+        <span class="eyebrow">R.A.P.I.D. METHOD</span>
+        <h1>Treinar professores<br/><em>sem engessar professores.</em></h1>
+        <p>Uma certificação prática para transformar conteúdo em comunicação, participação e aprendizagem real.</p>
+        <div class="rapid-word" aria-label="R A P I D">
+          <span data-letter="R">R</span><span data-letter="A">A</span><span data-letter="P">P</span><span data-letter="I">I</span><span data-letter="D">D</span>
+        </div>
+      </div>
+      <small>Programa pedagógico oficial • Purple Idiomas</small>
+    </section>
+
+    <section class="login-panel">
+      <form id="rapidLoginForm" class="login-card">
+        <div class="mobile-brand"><img src="/assets/brand/purple-gestao-symbol.png" alt="Purple" /><span>Purple Academy</span></div>
+        <span class="eyebrow">ACESSO AO TREINAMENTO</span>
+        <h2>Continue sua jornada</h2>
+        <p>Use o mesmo acesso cadastrado pela Purple.</p>
+        <label for="rapidEmail">E-mail</label>
+        <input id="rapidEmail" type="email" autocomplete="username" placeholder="teacher@purpleidiomas.com.br" required />
+        <label for="rapidPassword">Senha</label>
+        <div class="password-wrap"><input id="rapidPassword" type="password" autocomplete="current-password" required /><button id="togglePassword" type="button" aria-label="Mostrar senha">Ver</button></div>
+        <div id="rapidLoginError" class="form-error hidden"></div>
+        <button id="rapidLoginButton" class="btn primary full" type="submit">Entrar na Purple Academy</button>
+        <small class="secure-note">Acesso restrito a professores e equipe pedagógica autorizada.</small>
+      </form>
+    </section>
+  </main>
+
+  <div id="rapidApp" class="rapid-app hidden">
+    <aside id="rapidSidebar" class="rapid-sidebar">
+      <div class="sidebar-brand">
+        <img src="/assets/brand/purple-gestao-symbol.png" alt="" aria-hidden="true" />
+        <div><b>Purple Academy</b><span>R.A.P.I.D. Certification</span></div>
+      </div>
+      <nav id="rapidNav" class="rapid-nav"></nav>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-profile">
+        <div id="rapidAvatar" class="avatar">P</div>
+        <div><b id="rapidUserName">Professor</b><span id="rapidUserRole">Teacher</span></div>
+      </div>
+      <button id="rapidLogout" class="nav-link danger" type="button"><span>↪</span>Sair</button>
+    </aside>
+
+    <div class="rapid-main">
+      <header class="rapid-topbar">
+        <button id="rapidMenuButton" class="icon-btn mobile-only" type="button" aria-label="Abrir menu">☰</button>
+        <div class="topbar-title"><span id="rapidBreadcrumb">Purple Academy</span><b id="rapidPageTitle">Minha jornada</b></div>
+        <div class="topbar-actions">
+          <span id="syncBadge" class="sync-badge">● conectado</span>
+          <button id="adminModeButton" class="btn ghost small hidden" type="button">Painel Gestão</button>
+        </div>
+      </header>
+      <section id="rapidContent" class="rapid-content" aria-live="polite"></section>
+    </div>
+    <button id="rapidSidebarBackdrop" class="sidebar-backdrop" type="button" aria-label="Fechar menu"></button>
+  </div>
+
+  <div id="rapidModalRoot"></div>
+
+  <script src="/auth/config.js?v=94"></script>
+  <script src="/assets/vendor/supabase-js-2.min.js"></script>
+  <script src="/core/supabase-service.js?v=3"></script>
+  <script src="/rapid/content.js?v=1"></script>
+  <script src="/rapid/rapid.js?v=1"></script>
+</body>
+</html>
