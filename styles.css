@@ -5039,6 +5039,60 @@ body:has(.turma-workspace){
 }
 .class-block-list b{color:#2a1735!important;font-size:.86rem!important}
 .class-block-list small{color:#6f6178!important;font-size:.74rem!important;font-weight:760!important}
+.class-grades-panel{
+  display:grid!important;
+  gap:14px!important;
+}
+.class-grade-list,.class-grade-entry-list{
+  display:grid!important;
+  gap:10px!important;
+}
+.class-grade-list>article,.class-grade-entry-list>article{
+  display:grid!important;
+  gap:10px!important;
+  border:1px solid rgba(70,31,96,.1)!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  padding:12px!important;
+}
+.grade-student-main,.class-grade-entry-list>article{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+.grade-student-main .student-link{
+  font-size:14px!important;
+  font-weight:900!important;
+}
+.grade-score-grid{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(116px,1fr))!important;
+  gap:8px!important;
+}
+.grade-score-grid span{
+  display:grid!important;
+  gap:4px!important;
+  min-width:0!important;
+  border:1px solid rgba(70,31,96,.08)!important;
+  border-radius:12px!important;
+  background:#fbfafc!important;
+  padding:9px 10px!important;
+  color:#2a153b!important;
+  font-size:13px!important;
+  font-weight:850!important;
+}
+.grade-score-grid b,.class-grade-entry-list small{
+  color:#7f748b!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
+.class-grade-entry-list span,.class-grade-entry-list small{
+  display:block!important;
+  margin-top:3px!important;
+}
 @media(max-width:1024px){
   .turma-list-row.premium-row{grid-template-columns:minmax(0,1fr) auto!important}
   .turma-row-meta,.turma-row-attendance{grid-column:1/-1;justify-items:start!important}
