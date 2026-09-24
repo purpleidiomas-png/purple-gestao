@@ -77,7 +77,7 @@ global.App.go('twr');
 const html=getElement('pageContainer').innerHTML;
 
 assert.strictEqual(state.page,'twr','Deborah deve conseguir abrir o TWR.');
-assert(html.includes('Todos os teachers'),'Coordenação deve ver o dashboard de todos os teachers.');
+assert(html.includes('Todos os professores'),'Coordenação deve ver o dashboard de todos os professores.');
 assert(html.includes('Carga da equipe'),'Coordenação deve ver métricas consolidadas da equipe.');
 assert(html.includes('Teacher A')||html.includes('Teacher B'),'Coordenação deve ver horários/teachers no quadro.');
 assert(!html.includes('Limpar TWR'),'Quem não tem twr.manage não deve ver ação destrutiva.');
