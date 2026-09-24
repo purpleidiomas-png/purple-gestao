@@ -5232,6 +5232,142 @@ body:has(.turma-workspace){
   overflow-y:visible!important;
 }
 
+/* Turmas > Cronograma: refined timeline rows. Keep the current flow, remove inherited rails/double dots. */
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact{
+  gap:10px!important;
+  margin-top:14px!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node{
+  grid-template-columns:128px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:14px!important;
+  min-height:76px!important;
+  padding:12px 14px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(54,30,71,.09)!important;
+  background:#fff!important;
+  box-shadow:0 10px 28px rgba(33,18,45,.045)!important;
+  opacity:1!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node::before,
+.turma-workspace .turma-schedule-premium .schedule-node>div::before{
+  display:none!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node.active{
+  border-color:rgba(132,38,211,.34)!important;
+  box-shadow:0 14px 34px rgba(132,38,211,.11)!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node.done{
+  border-color:rgba(55,154,92,.18)!important;
+  background:linear-gradient(90deg,#fff,#fbfffc)!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node time{
+  min-width:0!important;
+  padding-right:14px!important;
+  border-right:1px solid rgba(54,30,71,.08)!important;
+  color:#33203e!important;
+  line-height:1.25!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node time b{
+  font-size:.9rem!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node time small{
+  font-size:.75rem!important;
+  color:#7a6b84!important;
+  font-weight:850!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node>div:not(.timeline-actions){
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node-head{
+  justify-content:flex-start!important;
+  gap:10px!important;
+  margin:0 0 6px!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node-head h4{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:0!important;
+  color:#33203e!important;
+  font-size:.95rem!important;
+  letter-spacing:0!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node-head h4 i{
+  width:8px!important;
+  height:8px!important;
+  margin:0!important;
+  flex:0 0 8px!important;
+  box-shadow:0 0 0 4px rgba(132,38,211,.08)!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node-head span{
+  margin-left:auto!important;
+  padding:5px 10px!important;
+  border-radius:999px!important;
+  background:#effaf3!important;
+  color:#2a7f4f!important;
+  font-size:.72rem!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node p{
+  margin:0!important;
+  color:#6b5a75!important;
+  font-size:.82rem!important;
+  line-height:1.35!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node p b{
+  color:#5a4266!important;
+  font-size:.84rem!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node p small{
+  color:#8a7c91!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+.turma-workspace .turma-schedule-premium .timeline-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  min-width:148px!important;
+}
+.turma-workspace .turma-schedule-premium .timeline-actions .btn.primary{
+  min-width:66px!important;
+  min-height:38px!important;
+  border-radius:12px!important;
+}
+.turma-workspace .turma-schedule-premium .timeline-actions .action-menu summary{
+  width:42px!important;
+  min-width:42px!important;
+  height:38px!important;
+  border-radius:12px!important;
+}
+
+@media(max-width:760px){
+  .turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+  .turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node time{
+    border-right:0!important;
+    border-bottom:1px solid rgba(54,30,71,.08)!important;
+    padding:0 0 8px!important;
+  }
+  .turma-workspace .turma-schedule-premium .schedule-node p small{
+    white-space:normal!important;
+  }
+  .turma-workspace .turma-schedule-premium .timeline-actions{
+    min-width:0!important;
+    justify-content:flex-start!important;
+  }
+}
+
 /* TWR: normal pages use the document scroll. Only horizontal board overflow is allowed. */
 .twr-reference-page,
 .twr-reference-page.teacher,
@@ -5307,4 +5443,333 @@ body:has(.turma-workspace){
 .main-area{
   overflow-y:visible!important;
   overflow-x:clip!important;
+}
+
+/* TWR visual audit: remove internal hero, clarify controls and stabilize shared UI controls. */
+.topbar{
+  align-items:center!important;
+  gap:14px!important;
+}
+.topbar-actions{
+  align-items:center!important;
+  gap:10px!important;
+  overflow:visible!important;
+}
+.topbar-actions .select.compact{
+  min-height:42px!important;
+  height:42px!important;
+  font-weight:500!important;
+}
+.notification-btn{
+  position:relative!important;
+  display:grid!important;
+  place-items:center!important;
+  width:42px!important;
+  height:42px!important;
+  flex:0 0 42px!important;
+  overflow:visible!important;
+  border-radius:15px!important;
+}
+.notification-btn #notificationIcon,
+.notification-btn .pg-icon{
+  display:grid!important;
+  place-items:center!important;
+  width:19px!important;
+  height:19px!important;
+}
+.notification-btn #notificationCount{
+  position:absolute!important;
+  top:-6px!important;
+  right:-6px!important;
+  z-index:2!important;
+  display:inline-grid!important;
+  place-items:center!important;
+  min-width:20px!important;
+  height:20px!important;
+  padding:0 5px!important;
+  border:2px solid #fff!important;
+  border-radius:999px!important;
+  background:#ff6b21!important;
+  color:#fff!important;
+  font-size:10px!important;
+  font-weight:700!important;
+  line-height:1!important;
+  box-shadow:0 8px 18px rgba(255,107,33,.25)!important;
+}
+
+.page.twr-reference-page{
+  gap:12px!important;
+  font-weight:400!important;
+}
+.page.twr-reference-page>.twr-reference-header{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:start!important;
+  gap:14px!important;
+  padding:0 2px 2px!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.page.twr-reference-page>.twr-reference-header:before,
+.page.twr-reference-page>.twr-reference-header:after{
+  display:none!important;
+}
+.twr-reference-header .eyebrow{
+  display:block!important;
+  margin:0 0 3px!important;
+  color:#7b22d3!important;
+  font-size:.7rem!important;
+  font-weight:600!important;
+  letter-spacing:.14em!important;
+}
+.twr-reference-header h2{
+  font-weight:700!important;
+}
+.twr-reference-header h3{
+  margin:0 0 3px!important;
+  color:#17205a!important;
+  font-size:clamp(1.04rem,1.4vw,1.28rem)!important;
+  font-weight:600!important;
+  line-height:1.18!important;
+  letter-spacing:-.02em!important;
+}
+.twr-reference-header p{
+  max-width:720px!important;
+  color:#69708b!important;
+  font-size:.93rem!important;
+  font-weight:400!important;
+}
+.twr-header-actions{
+  align-items:center!important;
+  gap:8px!important;
+}
+.twr-header-actions .btn{
+  min-height:38px!important;
+  padding:8px 14px!important;
+  border-radius:13px!important;
+  font-weight:600!important;
+}
+
+.twr-reference-controls.twr-control-bar{
+  display:grid!important;
+  grid-template-columns:minmax(190px,250px) minmax(260px,.9fr) minmax(330px,1.15fr) minmax(260px,.9fr)!important;
+  align-items:end!important;
+  gap:10px!important;
+  padding:10px!important;
+  border:1px solid rgba(108,74,182,.12)!important;
+  border-radius:20px!important;
+  background:rgba(255,255,255,.78)!important;
+  box-shadow:0 14px 34px rgba(38,29,76,.045)!important;
+  backdrop-filter:blur(14px)!important;
+}
+.twr-control-group{
+  min-width:0!important;
+}
+.twr-control-group .field{
+  margin:0!important;
+}
+.twr-control-label,
+.twr-reference-controls label{
+  display:block!important;
+  margin:0 0 5px!important;
+  color:#6b6680!important;
+  font-size:.68rem!important;
+  font-weight:500!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
+.twr-reference-controls select,
+.twr-reference-controls input,
+.twr-reference-controls strong{
+  min-height:38px!important;
+  height:38px!important;
+  border-color:#e7eaf3!important;
+  border-radius:13px!important;
+  color:#151b4b!important;
+  font-size:.83rem!important;
+  font-weight:500!important;
+  box-shadow:none!important;
+}
+.twr-period-group{
+  display:grid!important;
+  grid-template-columns:36px minmax(140px,1fr) 36px 74px!important;
+  gap:7px!important;
+}
+.twr-period-group .twr-control-label,
+.twr-mode-group .twr-control-label,
+.twr-filter-group .twr-control-label{
+  grid-column:1/-1!important;
+}
+.twr-period-group .btn{
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 11px!important;
+  border-radius:13px!important;
+  font-weight:600!important;
+}
+.twr-period-group strong{
+  justify-content:center!important;
+  padding:0 12px!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+.twr-mode-group nav{
+  display:flex!important;
+  min-height:38px!important;
+  height:38px!important;
+  gap:3px!important;
+  padding:3px!important;
+  border:1px solid #e7eaf3!important;
+  border-radius:14px!important;
+  background:#f7f5fb!important;
+  overflow:visible!important;
+}
+.twr-mode-group nav button,
+.turma-workspace .twr-top-tabs button,
+.settings-tabs button,
+.book-production-tabs button,
+.student-financial-history-tabs button,
+.turmas-module-tabs button{
+  min-width:max-content!important;
+  flex:0 0 auto!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  line-height:1!important;
+  font-weight:500!important;
+}
+.twr-mode-group nav button{
+  min-height:30px!important;
+  padding:0 12px!important;
+  border:0!important;
+  border-radius:11px!important;
+  background:transparent!important;
+  color:#666981!important;
+  font-size:.8rem!important;
+  cursor:pointer!important;
+}
+.twr-mode-group nav button.active,
+.turma-workspace .twr-top-tabs button.active,
+.settings-tabs button.active,
+.book-production-tabs button.active,
+.student-financial-history-tabs button.active,
+.turmas-module-tabs button.active{
+  font-weight:600!important;
+  background:linear-gradient(135deg,#6f35e8 0%,#4d25bf 100%)!important;
+  background-size:100% 100%!important;
+  color:#fff!important;
+  box-shadow:0 8px 18px rgba(82,45,196,.2)!important;
+}
+.twr-filter-group{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:7px!important;
+}
+.twr-filter-group select{
+  width:100%!important;
+}
+.twr-admin-metrics{
+  gap:8px!important;
+}
+.twr-admin-metrics .metric-card{
+  min-height:76px!important;
+  padding:12px 14px!important;
+  border-radius:18px!important;
+  box-shadow:0 12px 28px rgba(36,48,90,.05)!important;
+}
+.twr-admin-metrics .metric-card .label{
+  margin:0 0 6px!important;
+  color:#77728a!important;
+  font-size:.76rem!important;
+  font-weight:500!important;
+}
+.twr-admin-metrics .metric-card .value{
+  color:#12184f!important;
+  font-size:1.42rem!important;
+  font-weight:700!important;
+}
+.twr-admin-metrics .metric-card .note{
+  color:#7b8196!important;
+  font-size:.73rem!important;
+  font-weight:400!important;
+}
+.twr-day-board header b,
+.twr-director-day-board header b,
+.twr-summary-card h4,
+.twr-next-card h4,
+.twr-type-card b{
+  font-weight:600!important;
+}
+.twr-day-board header strong,
+.twr-director-day-board header strong,
+.twr-activity-card b,
+.twr-director-teacher b,
+.twr-director-shift b{
+  font-weight:600!important;
+}
+.twr-day-board header span,
+.twr-director-day-board header span,
+.twr-activity-card small,
+.twr-director-teacher span{
+  font-weight:400!important;
+}
+
+@media(max-width:1280px){
+  .twr-reference-controls.twr-control-bar{
+    grid-template-columns:minmax(180px,1fr) minmax(240px,1fr)!important;
+  }
+}
+@media(max-width:760px){
+  .topbar-actions{
+    gap:6px!important;
+  }
+  .notification-btn{
+    width:40px!important;
+    height:40px!important;
+    flex-basis:40px!important;
+  }
+  .notification-btn #notificationCount{
+    top:-5px!important;
+    right:-5px!important;
+    min-width:18px!important;
+    height:18px!important;
+    font-size:9px!important;
+  }
+  .page.twr-reference-page>.twr-reference-header{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+  }
+  .twr-header-actions{
+    justify-content:stretch!important;
+  }
+  .twr-header-actions .btn{
+    flex:1 1 0!important;
+  }
+  .twr-reference-controls.twr-control-bar{
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+    padding:9px!important;
+  }
+  .twr-period-group{
+    grid-template-columns:38px minmax(0,1fr) 38px!important;
+  }
+  .twr-period-group .btn.soft{
+    grid-column:1/-1!important;
+  }
+  .twr-mode-group nav{
+    height:auto!important;
+    min-height:38px!important;
+    overflow-x:auto!important;
+  }
+  .twr-filter-group{
+    grid-template-columns:1fr!important;
+  }
+  .twr-admin-metrics{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:480px){
+  .twr-admin-metrics{
+    grid-template-columns:1fr!important;
+  }
 }
