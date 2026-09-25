@@ -184,6 +184,17 @@ assert.deepStrictEqual(api.scheduleMeetings(brokenSchedule).map(m => m.encounter
 assert.strictEqual(api.normalizeScheduleOrder(brokenSchedule), true, 'normalizacao detecta repeticao antiga');
 assert.deepStrictEqual(brokenSchedule.meetings.map(m => m.encounterOrder), [1, 2, 3], 'normalizacao remove repeticao e reordena encontros');
 
+const shiftedSchedule = JSON.parse(JSON.stringify(preview));
+shiftedSchedule.status = 'published';
+shiftedSchedule.skippedDates = [{ id: 'skip-test', date: '2026-09-26', reason: 'Aula cancelada pela professora' }];
+window.PurpleState.db.settings.turmas = window.PurpleState.db.settings.turmas || {};
+window.PurpleState.db.settings.turmas.generatedSchedules = { [klass.id]: shiftedSchedule };
+api.recalcSchedule(klass.id);
+const shiftedMeetings = api.scheduleMeetings(window.PurpleState.db.settings.turmas.generatedSchedules[klass.id]);
+assert.strictEqual(shiftedMeetings[0].date, '2026-09-12', 'recalculo preserva aulas anteriores ao adiamento');
+assert.strictEqual(shiftedMeetings[1].date, '2026-10-17', 'data marcada sem aula empurra o encontro para a proxima data valida');
+assert(window.PurpleState.db.settings.turmas.generatedSchedules[klass.id].ignored.some(item => item.date === '2026-09-26' && /Aula movida/.test(item.reason)), 'data movida aparece como ignorada no cronograma');
+
 window.PurpleState.db.settings.turmas.generatedSchedules = { [klass.id]: { ...preview, status: 'published' } };
 window.PurpleState.db.settings.turmas.blockExecution = {
   [`${klass.id}::${preview.meetings[0].blocks[0].id}`]: { status: 'done' },

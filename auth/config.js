@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.13.62-turmas-schedule-stepper',
-  serviceWorkerVersion:'purple-gestao-v285',
+  appVersion:'1.13.63-turmas-postpone-schedule',
+  serviceWorkerVersion:'purple-gestao-v286',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',
