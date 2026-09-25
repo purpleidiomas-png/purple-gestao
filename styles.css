@@ -5557,6 +5557,18 @@ body:has(.turma-workspace){
   overflow:visible!important;
   border-radius:15px!important;
 }
+.notification-btn #notificationIcon{
+  position:static!important;
+  inset:auto!important;
+  min-width:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#4a315a!important;
+  box-shadow:none!important;
+  font-size:0!important;
+}
 .notification-btn #notificationIcon,
 .notification-btn .pg-icon{
   display:grid!important;
@@ -5582,6 +5594,30 @@ body:has(.turma-workspace){
   font-weight:700!important;
   line-height:1!important;
   box-shadow:0 8px 18px rgba(255,107,33,.25)!important;
+}
+.notification-btn #notificationCount:empty,
+.notification-btn #notificationCount:not(:empty){
+  position:absolute!important;
+}
+.notification-icon{
+  background:#f4effb!important;
+  color:#6f35e8!important;
+}
+.notification.red .notification-icon{
+  background:#fff1f1!important;
+  color:#d92d20!important;
+}
+.notification.yellow .notification-icon{
+  background:#fff7e8!important;
+  color:#ff7a30!important;
+}
+.notification.blue .notification-icon{
+  background:#eef4ff!important;
+  color:#3157c9!important;
+}
+.notification-icon .pg-icon{
+  width:18px!important;
+  height:18px!important;
 }
 
 .page.twr-reference-page{
