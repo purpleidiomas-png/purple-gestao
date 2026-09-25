@@ -23,7 +23,19 @@
   const can=permission=>Boolean(user()?.permissions?.[permission]);
   const canEdit=()=>user().role!=='viewer'&&(can('reports.edit')||can('reports.create')||can('panel.view'));
   const teacherLabel=id=>(db().teachers||[]).find(t=>t.id===id)?.name||'Professor não vinculado';
-  const bookLabel=id=>(db().inventoryItems||[]).find(b=>(b.id||b.supabaseId)===id)?.name||(db().lessonPlansWorkspace?.courses||[]).find(c=>c.id===id)?.name||'Livro não vinculado';
+  const bookToken=value=>norm(String(value||''));
+  const bookMatches=(item,id)=>{const token=bookToken(id);return token&&[item?.id,item?.supabaseId,item?.legacyId,item?.key,item?.code,item?.internal_code,item?.sku,item?.name,item?.title,item?.bookName,item?.label].some(value=>bookToken(value)===token)};
+  const bookLabel=(id,record={})=>{
+    const fallback=record?.bookName||record?.bookTitle||record?.book||record?.materialName||'';
+    const books=[...(db().inventoryItems||[]),...(db().books||[]),...(db().library||[])];
+    const found=books.find(item=>bookMatches(item,id)||bookMatches(item,fallback));
+    if(found)return found.name||found.title||found.bookName||found.label||found.internal_code||found.code;
+    const course=(db().lessonPlansWorkspace?.courses||[]).find(item=>bookMatches(item,id)||bookMatches(item,fallback));
+    if(course)return course.name||course.title||course.label;
+    if(fallback)return fallback;
+    if(id&&!/^book-|^preset-|^[0-9a-f-]{20,}$/i.test(String(id)))return String(id);
+    return 'Livro não vinculado';
+  };
   function studentMatchesClass(student={},klass={}){
     if(String(student.classId||'')===String(klass.id||''))return true;
     const linkedIds=new Set([...(klass.studentIds||[]),...(klass.students||[]).map(item=>typeof item==='string'?item:item?.id)].filter(Boolean).map(String));
@@ -809,7 +821,7 @@
   function visibleClasses(){
     const t=ensure(),query=norm(state().catalogSearch?.classes||''),filter=t.classFilter||'active';
     let all=(db().classes||[]).filter(c=>filter==='archived'?isArchivedClass(c):filter==='all'?true:isActiveClass(c));
-    if(query)all=all.filter(c=>norm([c.name,c.course,c.level,c.status,teacherLabel(c.teacherId),bookLabel(c.bookId),c.room,c.schedule,...classBlocks(c).flatMap(block=>[block.day,block.time,block.room])].join(' ')).includes(query));
+    if(query)all=all.filter(c=>norm([c.name,c.course,c.level,c.status,teacherLabel(c.teacherId),bookLabel(c.bookId,c),c.room,c.schedule,...classBlocks(c).flatMap(block=>[block.day,block.time,block.room])].join(' ')).includes(query));
     if(user().role!=='teacher')return sortClassesBySchedule(all);
     const teacherId=window.App?.resolveTeacherIdForUser?.(user())||'';
     return teacherId?sortClassesBySchedule(all.filter(c=>c.teacherId===teacherId)):[];
@@ -822,7 +834,7 @@
   }
 
   function lessonMeta(c){
-    const w=lessonWorkspace(),courses=w.courses||[],bookName=norm(bookLabel(c.bookId)||c.course);
+    const w=lessonWorkspace(),courses=w.courses||[],bookName=norm(bookLabel(c.bookId,c)||c.course);
     const course=courses.find(item=>norm(item.id)===norm(c.bookId)||bookName.includes(norm(item.name))||norm(c.course).includes(norm(item.name)))||courses[0];
     const unit=(course?.units||[])[0],lesson=(unit?.lessons||[])[0],plan=w.lessonPlans?.[lesson?.id];
     return {course,unit,lesson,plan};
@@ -855,7 +867,7 @@
 
   function renderCard(c){
     const students=classStudents(c.id),session=nextSession(c),meta=lessonMeta(c),meeting=todayMeeting(c),summary=attendanceSummary(c,meeting);
-    const book=bookLabel(c.bookId),missingBook=norm(book).includes('NAO VINCULADO'),teacher=teacherLabel(c.teacherId);
+    const book=bookLabel(c.bookId,c),missingBook=norm(book).includes('NAO VINCULADO'),teacher=teacherLabel(c.teacherId);
     return `<article class="turma-list-row premium-row">
       <button class="turma-row-main" onclick="PurpleTurmas.open('${esc(c.id)}')">
         <span class="eyebrow turma-row-kicker"><i>${esc(c.course||'Curso')}</i>${c.level?`<em>/ ${esc(c.level)}</em>`:''}</span>
@@ -938,7 +950,7 @@
 
   function renderClass(c){
     const t=ensure(),tab=t.activeTab||'schedule',tabs=[['students','Alunos'],['schedule','Cronograma'],['grades','Notas'],['base','Base'],['history','Histórico']];
-    const blocks=classBlocks(c),book=bookLabel(c.bookId),teacher=teacherLabel(c.teacherId);
+    const blocks=classBlocks(c),book=bookLabel(c.bookId,c),teacher=teacherLabel(c.teacherId);
     return `<div class="page turma-workspace">
       <div class="turma-topline compact-class-head"><button class="btn ghost small" onclick="PurpleTurmas.back()">Voltar</button><div><h2>${esc(c.name)}</h2><p><b>${esc(teacher)}</b><span>${esc(blocks.map(b=>[b.day,b.time].filter(Boolean).join(' · ')).join(' / ')||'Horário não informado')}</span></p></div><span class="turma-book-status ${norm(book).includes('NAO VINCULADO')?'warning':''}">${esc(book)}</span></div>
       <nav class="twr-top-tabs">${tabs.map(([id,label])=>`<button class="${tab===id?'active':''}" onclick="PurpleTurmas.tab('${id}')">${label}</button>`).join('')}</nav>
