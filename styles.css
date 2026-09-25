@@ -4839,19 +4839,19 @@ body:has(.turma-workspace){
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
-  width:24px!important;
-  height:22px!important;
-  flex:0 0 24px!important;
-  border-radius:8px!important;
-  background:linear-gradient(135deg,#d9fbea 0%,#38d27f 45%,#0f8d50 100%)!important;
-  border:1px solid rgba(15,141,80,.22)!important;
-  box-shadow:0 7px 16px rgba(15,141,80,.16),inset 0 1px 0 rgba(255,255,255,.72)!important;
-  color:#fff!important;
-  font-size:.76rem!important;
+  width:16px!important;
+  height:16px!important;
+  flex:0 0 16px!important;
+  border-radius:0!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#15945a!important;
+  font-size:.9rem!important;
   font-weight:950!important;
-  transform:translateY(1px)!important;
+  transform:translateY(.5px)!important;
 }
-.class-verified-badge i{font-style:normal!important;text-shadow:0 1px 4px rgba(12,88,50,.28)!important;transform:translateY(-.5px)}
+.class-verified-badge i{font-style:normal!important;text-shadow:0 1px 6px rgba(21,148,90,.14)!important;transform:translateY(-.5px)}
 .class-verify-due{
   display:inline-flex!important;
   align-items:center!important;
