@@ -826,7 +826,40 @@ function studentRowToRecord(row){const data=row.data||{};return {...data,id:data
 function teacherRowToRecord(row){const data=row.data||{};return {...data,id:data.legacyId||data.id||row.id,supabaseId:row.id,name:row.name||data.name||'',email:row.email||data.email||'',phone:row.phone||data.phone||'',status:appStatus(row.status||data.status),createdAt:data.createdAt||row.created_at}}
 function classRowToRecord(row){const data=row.data||{};return {...data,id:data.legacyId||data.id||row.id,supabaseId:row.id,name:row.name||data.name||'',course:row.course||data.course||'',category:row.category||data.category||'',level:row.level??data.level??'',classNumber:row.classNumber||data.classNumber||1,teacherId:data.teacherId||data.teacher_id||row.teacher_id||'',teacher_id:row.teacher_id||data.teacher_id||'',capacity:row.max_students??data.capacity??data.max_students??0,max_students:row.max_students??data.max_students??data.capacity??0,status:appStatus(row.status||data.status),createdAt:data.createdAt||row.created_at}}
 function financialChargeRowToRecordLegacy1(row){const data=row.data||{},type=(String(row.charge_type||data.chargeType||'OUTRO').toUpperCase()),categoryMap={MENSALIDADE:'Mensalidade',MATERIAL_DIDATICO:'Material didático',MATRICULA:'Matrícula',REPOSICAO:'Reposição',OUTRO:'Outro'},statusMap={PENDING:'pending',PAID:'paid',OVERDUE:'overdue',CANCELED:'cancelled',REFUNDED:'refunded'};return {...data,id:data.legacyId||data.id||row.id,supabaseId:row.id,type:'receivable',studentId:row.student_id||data.studentId||'',person:row.student_name||data.person||'',student:row.student_name||data.student||'',description:row.description||data.description||'',category:categoryMap[type]||type,subaccount:categoryMap[type]||type,competence:row.competence||data.competence||'',dueDate:row.due_date||data.dueDate||'',amount:Number(row.value||data.amount||0),paidAmount:Number(row.paid_amount||data.paidAmount||0),paidDate:row.paid_at?String(row.paid_at).slice(0,10):(data.paidDate||''),paymentMethod:row.billing_type||data.paymentMethod||'PIX',account:'ASAAS',status:statusMap[String(row.status||'PENDING').toUpperCase()]||'pending',invoiceUrl:row.invoice_url||data.invoiceUrl||'',bankSlipUrl:row.bank_slip_url||data.bankSlipUrl||'',digitableLine:row.digitable_line||data.digitableLine||'',pixCopyPaste:row.pix_copy_paste||data.pixCopyPaste||'',pixQrCode:row.pix_qr_code||data.pixQrCode||'',netValue:Number(row.net_value||data.netValue||0),feeValue:Number(row.fee_value||data.feeValue||0),externalChargeId:row.external_charge_id||data.externalChargeId||'',createdAt:data.createdAt||row.created_at,updatedAt:data.updatedAt||row.updated_at,active:!row.archived_at}}
-function studentRecordToRow(student){const id=recordUuid(student),data={...student,supabaseId:id,legacyId:isUUID(student.id)?(student.legacyId||student.id):student.id};student.supabaseId=id;return {id,name:upperFormValue(student.name||''),email:student.email||'',phone:student.phone||student.whatsapp||'',class_id:isUUID(student.classId||student.class_id)?(student.classId||student.class_id):null,status:dbStatus(student.status||student.situation),data}}
+function studentRecordToRow(student){
+  const id=recordUuid(student),legacyId=isUUID(student.id)?(student.legacyId||student.id):student.id,document=formatCpfBR(student.document||''),code=upperFormValue(student.code||document||legacyId||id),data={...student,supabaseId:id,legacyId,code};
+  student.supabaseId=id;
+  student.code=code;
+  const classId=isUUID(student.classId||student.class_id)?(student.classId||student.class_id):null;
+  return {
+    id,
+    legacy_record_id:legacyId||student.id||id,
+    code,
+    name:upperFormValue(student.name||''),
+    full_name:upperFormValue(student.name||''),
+    social_name:upperFormValue(student.socialName||'')||null,
+    document:document||null,
+    rg:upperFormValue(student.rg||'')||null,
+    birth_date:student.birthDate||null,
+    sex:student.sex||null,
+    email:student.email||null,
+    phone:student.phone||student.whatsapp||null,
+    whatsapp:student.whatsapp||student.phone||null,
+    contact_phone:student.contactPhone||student.responsiblePhone||null,
+    guardian_name:student.guardian||student.responsibleName||null,
+    responsible_name:student.responsibleName||student.guardian||null,
+    class_id:classId,
+    status:dbStatus(student.status||student.situation),
+    registration_date:student.enrollmentDate||student.registrationDate||null,
+    address_line:student.address||null,
+    address_number:student.number||student.addressNumber||null,
+    district:student.district||student.neighborhood||null,
+    city:student.city||null,
+    state:student.state||student.uf||null,
+    zip_code:student.zip||student.cep||null,
+    data
+  }
+}
 function teacherRecordToRow(teacher){const id=recordUuid(teacher),data={...teacher,supabaseId:id,legacyId:isUUID(teacher.id)?(teacher.legacyId||teacher.id):teacher.id};teacher.supabaseId=id;return {id,name:upperFormValue(teacher.name||''),email:teacher.email||'',phone:teacher.phone||'',status:dbStatus(teacher.status),data}}
 function classRecordToRow(classRecord){const id=recordUuid(classRecord),teacher=(State.db.teachers||[]).find(t=>t.id===classRecord.teacherId||t.supabaseId===classRecord.teacherId),teacherId=isUUID(teacher?.supabaseId)?teacher.supabaseId:(isUUID(classRecord.teacherId)?classRecord.teacherId:null),data={...classRecord,supabaseId:id,legacyId:isUUID(classRecord.id)?(classRecord.legacyId||classRecord.id):classRecord.id};classRecord.supabaseId=id;return {id,course:upperFormValue(classRecord.course||classRecord.name||''),category:upperFormValue(classRecord.category||'ADULTO'),level:classRecord.level?upperFormValue(classRecord.level):null,classNumber:Number(classRecord.classNumber||1),name:upperFormValue(classRecord.name||''),teacher_id:teacherId,max_students:Number(classRecord.capacity||classRecord.max_students||0),status:dbStatus(classRecord.status),data}}
 async function saveDirectoryRecord(kind,table,record,toRow){
@@ -2251,6 +2284,11 @@ async function saveStudentCleanTopTabsReliable(id='',nextAction='close'){
     if(nextAction==='new')setTimeout(()=>editStudentCleanTopTabs(),80);
   }catch(error){
     console.error('Purple Gestão — falha ao salvar aluno:',error);
+    if(localPersisted){
+      try{closeModal();renderPage()}catch(renderError){console.warn('Purple Gestão — aluno salvo, falha ao atualizar tela:',renderError)}
+      toast('Aluno salvo. Se não aparecer imediatamente, atualize a lista de alunos.');
+      return;
+    }
     if(!localPersisted){
       if(existing)restoreRecord(existing,before);
       else State.db.students=arr.filter(student=>student.id!==payload.id);
