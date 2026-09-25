@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.13.66-turmas-timeline-status-visuals',
-  serviceWorkerVersion:'purple-gestao-v289',
+  appVersion:'1.13.67-turmas-content-replan',
+  serviceWorkerVersion:'purple-gestao-v290',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',
