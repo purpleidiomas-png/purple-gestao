@@ -5071,7 +5071,8 @@ body:has(.turma-workspace){
   grid-template-columns:repeat(auto-fit,minmax(116px,1fr))!important;
   gap:8px!important;
 }
-.grade-score-grid span{
+.grade-score-grid span,
+.grade-score-grid .grade-score-card{
   display:grid!important;
   gap:4px!important;
   min-width:0!important;
@@ -5082,6 +5083,14 @@ body:has(.turma-workspace){
   color:#2a153b!important;
   font-size:13px!important;
   font-weight:850!important;
+}
+.grade-score-grid .grade-score-card{
+  text-align:left!important;
+  cursor:pointer!important;
+}
+.grade-score-grid .grade-score-card:hover{
+  border-color:rgba(132,38,211,.26)!important;
+  background:#f8f1fd!important;
 }
 .grade-score-grid b,.class-grade-entry-list small{
   color:#7f748b!important;
