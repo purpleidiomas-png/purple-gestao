@@ -4824,6 +4824,7 @@ body:has(.turma-workspace){
 .turma-row-attendance b{font-size:.95rem!important;color:#2e173d!important}
 .turma-row-actions{display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:6px!important}
 .action-menu{position:relative!important;display:inline-flex!important}
+.action-menu[open]{z-index:10000!important}
 .action-menu>summary{
   list-style:none!important;
   display:inline-flex!important;
@@ -4845,7 +4846,7 @@ body:has(.turma-workspace){
   position:absolute!important;
   right:0!important;
   top:calc(100% + 6px)!important;
-  z-index:50!important;
+  z-index:10001!important;
   min-width:190px!important;
   padding:6px!important;
   border:1px solid rgba(55,25,72,.12)!important;
@@ -5248,6 +5249,12 @@ body:has(.turma-workspace){
   background:#fff!important;
   box-shadow:0 10px 28px rgba(33,18,45,.045)!important;
   opacity:1!important;
+  overflow:visible!important;
+  position:relative!important;
+  z-index:1!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node:has(.action-menu[open]){
+  z-index:1000!important;
 }
 .turma-workspace .turma-schedule-premium .schedule-node::before,
 .turma-workspace .turma-schedule-premium .schedule-node>div::before{
@@ -5334,8 +5341,11 @@ body:has(.turma-workspace){
   display:flex!important;
   align-items:center!important;
   justify-content:flex-end!important;
+  justify-self:end!important;
   gap:8px!important;
-  min-width:148px!important;
+  min-width:max-content!important;
+  position:relative!important;
+  z-index:2!important;
 }
 .turma-workspace .turma-schedule-premium .timeline-actions .btn.primary{
   min-width:66px!important;
