@@ -33,6 +33,9 @@ require('../modules/turmas/turmas.js');
 
   assert(test.gradeTypes().includes('Homework'), 'tipo homework único fica disponível');
   assert(!test.gradeTypes().includes('Homework Unit 14'), 'homework por unidade sai do campo tipo');
+  assert.strictEqual(test.normalizeGradeScore(10), 100, 'nota 10 deve virar 100%');
+  assert.strictEqual(test.normalizeGradeScore('8.5'), 85, 'nota decimal em escala 10 deve virar percentual');
+  assert.strictEqual(test.normalizeGradeScore(100), 100, 'nota 100 permanece 100%');
   assert.strictEqual(test.classStudents('class-sk2').length, 1, 'turma recupera aluno salvo com className legado');
 
   await api.setAttendance('class-test', 'stu-test', 'absent', '', { force: true });
@@ -71,8 +74,8 @@ require('../modules/turmas/turmas.js');
   await launch('Reading', 87);
   await launch('Midterm Exam', 75);
   await launch('Final Term', 79);
-  await launch('Homework', 100, 'Unit 13');
-  await launch('Homework', 80, 'Unit 14');
+  await launch('Homework', 10, 'Unit 13');
+  await launch('Homework', 8, 'Unit 14');
   const summary = test.studentClassGradeSummary('stu-test', 'class-test');
   assert(Math.abs(summary.finalAverage - 86.6) < 0.2, 'média final deve usar apenas avaliações permitidas e homework consolidado');
   assert.strictEqual(summary.homeworkAverage, 90, 'homework 13/14 entra na média de homework');
