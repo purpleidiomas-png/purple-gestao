@@ -790,14 +790,29 @@
   function attendancePercent(studentId,classId){
     return attendanceStats(studentId,classId)?.percent??null;
   }
+  function classSortDayIndex(c){
+    const first=classBlocks(c)[0]?.day||'';
+    const key=Object.keys(WEEKDAY_INDEX).find(day=>norm(first).startsWith(day.slice(0,3)));
+    const index=WEEKDAY_INDEX[key];
+    return index>=1&&index<=6?index:99;
+  }
+  function classSortStartMinutes(c){
+    const raw=String(classBlocks(c)[0]?.time||'');
+    const match=raw.match(/(\d{1,2})[:hH](\d{2})/);
+    if(!match)return 9999;
+    return Number(match[1])*60+Number(match[2]);
+  }
+  function sortClassesBySchedule(items){
+    return [...items].sort((a,b)=>classSortDayIndex(a)-classSortDayIndex(b)||classSortStartMinutes(a)-classSortStartMinutes(b)||norm(a.name).localeCompare(norm(b.name)));
+  }
 
   function visibleClasses(){
     const t=ensure(),query=norm(state().catalogSearch?.classes||''),filter=t.classFilter||'active';
     let all=(db().classes||[]).filter(c=>filter==='archived'?isArchivedClass(c):filter==='all'?true:isActiveClass(c));
     if(query)all=all.filter(c=>norm([c.name,c.course,c.level,c.status,teacherLabel(c.teacherId),bookLabel(c.bookId),c.room,c.schedule,...classBlocks(c).flatMap(block=>[block.day,block.time,block.room])].join(' ')).includes(query));
-    if(user().role!=='teacher')return all;
+    if(user().role!=='teacher')return sortClassesBySchedule(all);
     const teacherId=window.App?.resolveTeacherIdForUser?.(user())||'';
-    return teacherId?all.filter(c=>c.teacherId===teacherId):[];
+    return teacherId?sortClassesBySchedule(all.filter(c=>c.teacherId===teacherId)):[];
   }
 
   function nextSession(c){
