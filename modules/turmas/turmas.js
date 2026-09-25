@@ -828,7 +828,7 @@
     const book=bookLabel(c.bookId),missingBook=norm(book).includes('NAO VINCULADO'),teacher=teacherLabel(c.teacherId);
     return `<article class="turma-list-row premium-row">
       <button class="turma-row-main" onclick="PurpleTurmas.open('${esc(c.id)}')">
-        <span class="eyebrow">${esc(c.course||'Curso')} ${c.level?`/ ${esc(c.level)}`:''}</span>
+        <span class="eyebrow turma-row-kicker"><i>${esc(c.course||'Curso')}</i>${c.level?`<em>/ ${esc(c.level)}</em>`:''}</span>
         <strong>${esc(c.name)}</strong>
         <small>${esc([session.block.day,session.block.time].filter(Boolean).join(' · ')||c.schedule||'Horário não informado')}</small>
       </button>

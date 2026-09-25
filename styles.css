@@ -4801,6 +4801,19 @@ body:has(.turma-workspace){
 }
 .turma-row-main strong{font-size:.98rem!important;line-height:1.15!important;letter-spacing:-.01em!important}
 .turma-row-main small{font-size:.76rem!important;color:#736178!important;font-weight:750!important}
+.turma-row-kicker{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px!important;
+}
+.turma-row-kicker i,
+.turma-row-kicker em{
+  font-style:normal!important;
+  font-weight:950!important;
+  letter-spacing:.16em!important;
+}
+.turma-row-kicker i{color:#8426d3!important}
+.turma-row-kicker em{color:#ff7a30!important}
 .turma-row-meta{
   display:flex!important;
   flex-wrap:wrap!important;
