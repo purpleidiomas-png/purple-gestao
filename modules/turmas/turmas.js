@@ -827,6 +827,21 @@
     const unit=(course?.units||[])[0],lesson=(unit?.lessons||[])[0],plan=w.lessonPlans?.[lesson?.id];
     return {course,unit,lesson,plan};
   }
+  function daysSince(value){
+    if(!value)return 9999;
+    const at=new Date(value),now=new Date();
+    if(Number.isNaN(at.getTime()))return 9999;
+    return Math.floor((now-at)/86400000);
+  }
+  function classVerificationState(c={}){
+    const checkedAt=c.scheduleVerifiedAt||c.verifiedAt||'',age=daysSince(checkedAt),fresh=age<=15;
+    return {checkedAt,age,fresh,due:!checkedAt||age>15,label:fresh?'Cronograma verificado':checkedAt?'Verificação vencida':'Aguardando verificação'};
+  }
+  function classVerificationBadge(c={}){
+    const v=classVerificationState(c);
+    if(v.fresh)return `<span class="class-verified-badge" title="Cronograma verificado em ${fmtDate(String(v.checkedAt).slice(0,10))}. Próxima revisão em até 15 dias."><i>✓</i></span>`;
+    return `<span class="class-verify-due" title="${esc(v.label)}">verificar</span>`;
+  }
 
   function meetingAttendanceKey(c,meeting=null){return attendanceKey(c.id,meeting?.date||today(),meeting?.id||'main')}
   function attendanceKey(classId,date=today(),session='main'){return `${classId}::${date}::${session}`}
@@ -844,7 +859,7 @@
     return `<article class="turma-list-row premium-row">
       <button class="turma-row-main" onclick="PurpleTurmas.open('${esc(c.id)}')">
         <span class="eyebrow turma-row-kicker"><i>${esc(c.course||'Curso')}</i>${c.level?`<em>/ ${esc(c.level)}</em>`:''}</span>
-        <strong>${esc(c.name)}</strong>
+        <strong><span>${esc(c.name)}</span>${classVerificationBadge(c)}</strong>
         <small>${esc([session.block.day,session.block.time].filter(Boolean).join(' · ')||c.schedule||'Horário não informado')}</small>
       </button>
       <div class="turma-row-meta">
@@ -856,7 +871,7 @@
       <div class="turma-row-attendance"><b>${summary.present}/${summary.total}</b><small>presentes hoje</small></div>
       <div class="turma-row-actions">
         <button class="btn primary small" onclick="PurpleTurmas.open('${esc(c.id)}')">Abrir aula</button>
-        ${user().role!=='teacher'?`<details class="action-menu" onclick="event.stopPropagation()"><summary aria-label="Ações da turma">•••</summary><div><button onclick="App.editClass('${esc(c.id)}')">Editar turma</button><button onclick="PurpleTurmas.completeClass('${esc(c.id)}')">Concluir turma</button><button onclick="PurpleTurmas.archiveClass('${esc(c.id)}')">Arquivar</button><button class="danger" onclick="PurpleTurmas.deleteClass('${esc(c.id)}')">Excluir</button></div></details>`:''}
+        ${user().role!=='teacher'?`<details class="action-menu" onclick="event.stopPropagation()"><summary aria-label="Ações da turma">•••</summary><div><button onclick="PurpleTurmas.verifyClass('${esc(c.id)}')">Marcar verificada</button><button onclick="App.editClass('${esc(c.id)}')">Editar turma</button><button onclick="PurpleTurmas.completeClass('${esc(c.id)}')">Concluir turma</button><button onclick="PurpleTurmas.archiveClass('${esc(c.id)}')">Arquivar</button><button class="danger" onclick="PurpleTurmas.deleteClass('${esc(c.id)}')">Excluir</button></div></details>`:''}
       </div>
     </article>`;
   }
@@ -1499,6 +1514,16 @@
     if(!confirm('Arquivar esta turma? Ela ficará disponível no filtro Arquivadas / concluídas.'))return;
     updateClassStatus(classId,'Arquivada','Turma arquivada.');
   }
+  async function verifyClass(classId){
+    const c=(db().classes||[]).find(item=>item.id===classId);
+    if(!c)return toast('Turma não encontrada.');
+    c.scheduleVerifiedAt=new Date().toISOString();
+    c.scheduleVerifiedBy=user().name||'Purple';
+    c.timeline=Array.isArray(c.timeline)?c.timeline:[];
+    c.timeline.unshift({at:c.scheduleVerifiedAt,title:'Cronograma verificado',detail:`Conferido por ${c.scheduleVerifiedBy}. Próxima revisão em até 15 dias.`});
+    await persist('Turma marcada como verificada por 15 dias.');
+    rerender();
+  }
   function completeClass(classId){
     openCompleteClass(classId);
   }
@@ -1600,5 +1625,5 @@
     rerender();
   }
 
-  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting:(classId,meetingId)=>{ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender()},jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,cancelMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate}};
+  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting:(classId,meetingId)=>{ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender()},jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,verifyClass,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,cancelMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate}};
 })();
