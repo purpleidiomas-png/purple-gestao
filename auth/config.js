@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.13.83-class-verification-badge',
-  serviceWorkerVersion:'purple-gestao-v306',
+  appVersion:'1.13.84-class-verification-badge-ui',
+  serviceWorkerVersion:'purple-gestao-v307',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',

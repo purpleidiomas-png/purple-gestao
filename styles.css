@@ -4833,23 +4833,25 @@ body:has(.turma-workspace){
   color:#2c1738!important;
   cursor:pointer!important;
 }
-.turma-row-main strong{display:flex!important;align-items:center!important;gap:8px!important;font-size:.98rem!important;line-height:1.15!important;letter-spacing:-.01em!important}
+.turma-row-main strong{display:flex!important;align-items:center!important;gap:9px!important;font-size:.98rem!important;line-height:1.15!important;letter-spacing:-.01em!important}
 .turma-row-main strong>span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important}
 .class-verified-badge{
   display:inline-flex!important;
   align-items:center!important;
   justify-content:center!important;
-  width:20px!important;
-  height:20px!important;
-  flex:0 0 20px!important;
-  border-radius:999px!important;
-  background:linear-gradient(135deg,#19b86a,#0f8d50)!important;
-  box-shadow:0 8px 18px rgba(15,141,80,.22)!important;
+  width:24px!important;
+  height:22px!important;
+  flex:0 0 24px!important;
+  border-radius:8px!important;
+  background:linear-gradient(135deg,#d9fbea 0%,#38d27f 45%,#0f8d50 100%)!important;
+  border:1px solid rgba(15,141,80,.22)!important;
+  box-shadow:0 7px 16px rgba(15,141,80,.16),inset 0 1px 0 rgba(255,255,255,.72)!important;
   color:#fff!important;
-  font-size:.78rem!important;
+  font-size:.76rem!important;
   font-weight:950!important;
+  transform:translateY(1px)!important;
 }
-.class-verified-badge i{font-style:normal!important;transform:translateY(-.5px)}
+.class-verified-badge i{font-style:normal!important;text-shadow:0 1px 4px rgba(12,88,50,.28)!important;transform:translateY(-.5px)}
 .class-verify-due{
   display:inline-flex!important;
   align-items:center!important;
