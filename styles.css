@@ -5348,6 +5348,27 @@ body:has(.turma-workspace){
   height:38px!important;
   border-radius:12px!important;
 }
+.turma-workspace .turma-schedule-premium .schedule-head-actions{
+  align-items:flex-start!important;
+  gap:8px!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-stepper{
+  display:flex!important;
+  gap:6px!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  max-width:260px!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-stepper .btn{
+  min-height:34px!important;
+  padding:6px 10px!important;
+  border-radius:10px!important;
+  font-size:.72rem!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-stepper .btn:disabled{
+  opacity:.42!important;
+  cursor:not-allowed!important;
+}
 
 @media(max-width:760px){
   .turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node{
@@ -5365,6 +5386,11 @@ body:has(.turma-workspace){
   .turma-workspace .turma-schedule-premium .timeline-actions{
     min-width:0!important;
     justify-content:flex-start!important;
+  }
+  .turma-workspace .turma-schedule-premium .schedule-head-actions,
+  .turma-workspace .turma-schedule-premium .schedule-stepper{
+    justify-content:flex-start!important;
+    max-width:none!important;
   }
 }
 
