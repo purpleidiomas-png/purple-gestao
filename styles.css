@@ -5265,8 +5265,13 @@ body:has(.turma-workspace){
   box-shadow:0 14px 34px rgba(132,38,211,.11)!important;
 }
 .turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node.done{
-  border-color:rgba(55,154,92,.18)!important;
-  background:linear-gradient(90deg,#fff,#fbfffc)!important;
+  border-color:rgba(132,38,211,.2)!important;
+  background:linear-gradient(105deg,rgba(132,38,211,.12),rgba(255,122,24,.09) 46%,#fff 88%)!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node.done.active{
+  border-color:rgba(132,38,211,.42)!important;
+  background:linear-gradient(105deg,rgba(132,38,211,.18),rgba(255,122,24,.13) 48%,#fff 90%)!important;
+  box-shadow:0 16px 38px rgba(132,38,211,.13)!important;
 }
 .turma-workspace .turma-schedule-premium .schedule-timeline.compact .schedule-node time{
   min-width:0!important;
@@ -5311,6 +5316,11 @@ body:has(.turma-workspace){
   flex:0 0 8px!important;
   box-shadow:0 0 0 4px rgba(132,38,211,.08)!important;
 }
+.turma-workspace .turma-schedule-premium .schedule-node.done .schedule-node-head h4 i,
+.turma-workspace .turma-schedule-premium .schedule-node.done.active .schedule-node-head h4 i{
+  background:#2fb86b!important;
+  box-shadow:0 0 0 4px rgba(47,184,107,.14)!important;
+}
 .turma-workspace .turma-schedule-premium .schedule-node-head span{
   margin-left:auto!important;
   padding:5px 10px!important;
@@ -5346,6 +5356,25 @@ body:has(.turma-workspace){
   min-width:max-content!important;
   position:relative!important;
   z-index:2!important;
+}
+.turma-workspace .turma-schedule-premium .timeline-status{
+  min-width:86px!important;
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  background:#f6f1fb!important;
+  color:#6b2ca0!important;
+  font-size:.72rem!important;
+  font-weight:900!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node.done .timeline-status{
+  background:linear-gradient(90deg,rgba(132,38,211,.15),rgba(255,122,24,.16))!important;
+  color:#54206f!important;
+}
+.turma-workspace .turma-schedule-premium .schedule-node.cancelled .timeline-status{
+  background:#fff1f1!important;
+  color:#b42318!important;
 }
 .turma-workspace .turma-schedule-premium .timeline-actions .btn.primary{
   min-width:66px!important;
