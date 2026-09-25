@@ -31,7 +31,8 @@ require('../modules/turmas/turmas.js');
   const api = window.PurpleTurmas;
   const test = api._test;
 
-  assert(test.gradeTypes().includes('Homework Unit 14'), 'tipos de homework devem ir até Unit 14');
+  assert(test.gradeTypes().includes('Homework'), 'tipo homework único fica disponível');
+  assert(!test.gradeTypes().includes('Homework Unit 14'), 'homework por unidade sai do campo tipo');
   assert.strictEqual(test.classStudents('class-sk2').length, 1, 'turma recupera aluno salvo com className legado');
 
   await api.setAttendance('class-test', 'stu-test', 'absent', '', { force: true });
@@ -58,10 +59,10 @@ require('../modules/turmas/turmas.js');
   assert.strictEqual(window.PurpleState.db.classes[0].gradeEntries.length, 1, 'nota fica vinculada à turma');
   assert.strictEqual(window.PurpleState.db.students[0].gradeEntries.length, 1, 'nota espelha no perfil do aluno');
   assert.strictEqual(window.PurpleState.db.students[0].gradeEntries[0].classId, 'class-test', 'nota do aluno mantém vínculo da turma');
-  async function launch(type, score){
+  async function launch(type, score, unit = ''){
     fields['#classGradeType'] = field(type);
     fields['#classGradeScore'] = field(String(score));
-    fields['#classGradeUnit'] = field(type.includes('Homework') ? type.replace('Homework ', '') : '');
+    fields['#classGradeUnit'] = field(unit);
     await api.saveClassGrade('class-test');
   }
   await launch('Participation', 100);
@@ -70,8 +71,8 @@ require('../modules/turmas/turmas.js');
   await launch('Reading', 87);
   await launch('Midterm Exam', 75);
   await launch('Final Term', 79);
-  await launch('Homework Unit 13', 100);
-  await launch('Homework Unit 14', 80);
+  await launch('Homework', 100, 'Unit 13');
+  await launch('Homework', 80, 'Unit 14');
   const summary = test.studentClassGradeSummary('stu-test', 'class-test');
   assert(Math.abs(summary.finalAverage - 86.6) < 0.2, 'média final deve usar apenas avaliações permitidas e homework consolidado');
   assert.strictEqual(summary.homeworkAverage, 90, 'homework 13/14 entra na média de homework');

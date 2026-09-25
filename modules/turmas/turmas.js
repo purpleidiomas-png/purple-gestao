@@ -37,7 +37,7 @@
     return (db().students||[]).filter(s=>studentMatchesClass(s,klass)&&String(s.situation||s.status||'Ativo').toLowerCase()!=='inativo');
   }
   const performanceGradeTypes=()=>['Participation','Speaking','Listening','Writing','Reading','Midterm Exam','Final Term'];
-  const homeworkGradeTypes=()=>Array.from({length:14},(_,i)=>`Homework Unit ${String(i+1).padStart(2,'0')}`);
+  const homeworkGradeTypes=()=>['Homework'];
   const gradeTypes=()=>[...performanceGradeTypes(),...homeworkGradeTypes()];
   function gradeValue(rows,type){
     const matches=rows.filter(row=>norm(row.type)===norm(type)&&Number.isFinite(Number(row.score)));
