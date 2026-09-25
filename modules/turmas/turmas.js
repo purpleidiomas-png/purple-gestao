@@ -1131,6 +1131,28 @@
     schedule.meetings.push({id:uid('local-meeting'),encounterOrder:nextEncounter,date:schedule.projectedEndDate||today(),time:schedule.time||'',blockIds:blocks.map(b=>b.id),blocks,localChange:true,changeReason:'Aula inserida'});
     recalcSchedule(classId);await persist('Aula inserida e cronograma recalculado.');closeModal();rerender();
   }
+  function classReplanBlock(block,meeting){
+    return {...block,id:`${meeting.id}__${block.id}__replan`,encounterOrder:meeting.encounterOrder,localChange:true,sourceBlockId:block.id,notes:'Conteúdo reajustado nesta turma'};
+  }
+  function replanScheduleContent(schedule,meetingId,groups,startIndex){
+    const meetings=scheduleMeetings(schedule),meetingIndex=meetings.findIndex(item=>item.id===meetingId);
+    if(!schedule||meetingIndex<0||startIndex<0||!groups[startIndex])return false;
+    let nextEncounter=Math.max(0,...meetings.map(item=>Number(item.encounterOrder)||0))+1;
+    for(let groupIndex=startIndex,offset=0;groupIndex<groups.length;groupIndex+=1,offset+=1){
+      let item=meetings[meetingIndex+offset];
+      if(!item){
+        item={id:uid('replanned-meeting'),encounterOrder:nextEncounter,date:schedule.projectedEndDate||'',time:schedule.time||'',blocks:[],blockIds:[],localChange:true,generatedByReplanFrom:meetingId};
+        nextEncounter+=1;
+        schedule.meetings.push(item);
+      }
+      const blocks=groups[groupIndex].blocks.map(block=>classReplanBlock(block,item));
+      item.blocks=blocks;
+      item.blockIds=blocks.map(block=>block.id);
+      item.localChange=true;
+      item.changeReason=`Conteúdo reajustado a partir do encontro ${String(meetings[meetingIndex].encounterOrder).padStart(2,'0')}`;
+    }
+    return true;
+  }
   function replanContent(classId,meetingId){
     const schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId),template=scheduleTemplate(schedule?.templateId),groups=groupedTemplateBlocks(template);
     if(!schedule||!meeting||!groups.length)return toast('Cronograma base não encontrado para ajustar conteúdo.');
@@ -1141,17 +1163,9 @@
   async function saveReplanContent(classId,meetingId){
     const schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId),template=scheduleTemplate(schedule?.templateId),groups=groupedTemplateBlocks(template);
     if(!schedule||!meeting||!groups.length)return toast('Cronograma base não encontrado para ajustar conteúdo.');
-    const meetings=scheduleMeetings(schedule),meetingIndex=meetings.findIndex(item=>item.id===meetingId),startIndex=Number($('#replanStartGroup')?.value||0);
-    if(meetingIndex<0||startIndex<0)return toast('Selecione o conteúdo inicial.');
-    meetings.slice(meetingIndex).forEach((item,offset)=>{
-      const group=groups[startIndex+offset];
-      if(!group)return;
-      const blocks=group.blocks.map(block=>({...block,encounterOrder:item.encounterOrder,localChange:true,notes:'Conteúdo reajustado nesta turma'}));
-      item.blocks=blocks;
-      item.blockIds=blocks.map(block=>block.id);
-      item.localChange=true;
-      item.changeReason=`Conteúdo reajustado a partir do encontro ${String(meeting.encounterOrder).padStart(2,'0')}`;
-    });
+    const startIndex=Number($('#replanStartGroup')?.value||0);
+    if(!replanScheduleContent(schedule,meetingId,groups,startIndex))return toast('Selecione o conteúdo inicial.');
+    recalcSchedule(classId);
     ensure().activeClassId=classId;
     ensure().activeTab='schedule';
     ensure().activeMeetingId=meetingId;
@@ -1543,5 +1557,5 @@
     rerender();
   }
 
-  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting:(classId,meetingId)=>{ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender()},jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,cancelMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting}};
+  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting:(classId,meetingId)=>{ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender()},jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,cancelMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting}};
 })();

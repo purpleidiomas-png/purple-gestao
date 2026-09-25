@@ -195,6 +195,21 @@ assert.strictEqual(shiftedMeetings[0].date, '2026-09-12', 'recalculo preserva au
 assert.strictEqual(shiftedMeetings[1].date, '2026-10-17', 'data marcada sem aula empurra o encontro para a proxima data valida');
 assert(window.PurpleState.db.settings.turmas.generatedSchedules[klass.id].ignored.some(item => item.date === '2026-09-26' && /Aula movida/.test(item.reason)), 'data movida aparece como ignorada no cronograma');
 
+const replanSchedule = JSON.parse(JSON.stringify(preview));
+replanSchedule.status = 'published';
+const replanGroups = api.groupedTemplateBlocks(template);
+const originalEnd = replanSchedule.projectedEndDate;
+assert.strictEqual(api.replanScheduleContent(replanSchedule, replanSchedule.meetings[6].id, replanGroups, 4), true, 'replanejamento de conteudo aplica sequencia anterior');
+window.PurpleState.db.settings.turmas.generatedSchedules = { [klass.id]: replanSchedule };
+window.PurpleState.db.settings.turmas.blockExecution = {
+  [`${klass.id}::${replanGroups[4].blocks[0].id}`]: { status: 'done' }
+};
+api.recalcSchedule(klass.id);
+const replannedMeetings = api.scheduleMeetings(replanSchedule);
+assert(replannedMeetings.length > preview.meetings.length, 'replanejamento que repete conteudo cria encontros extras no final');
+assert.notStrictEqual(replannedMeetings[6].blocks[0].id, replanGroups[4].blocks[0].id, 'bloco reajustado recebe id proprio da turma');
+assert(replanSchedule.projectedEndDate > originalEnd, 'data final aumenta quando a sequencia ganha encontro extra');
+
 window.PurpleState.db.settings.turmas.generatedSchedules = { [klass.id]: { ...preview, status: 'published' } };
 window.PurpleState.db.settings.turmas.blockExecution = {
   [`${klass.id}::${preview.meetings[0].blocks[0].id}`]: { status: 'done' },
