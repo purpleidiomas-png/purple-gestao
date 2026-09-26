@@ -753,7 +753,12 @@
   function addDays(date,days){const next=new Date(date);next.setDate(next.getDate()+days);return next}
   function iso(date){return date.toISOString().slice(0,10)}
   function classWeekday(c){const first=classBlocks(c)[0]?.day||'';const key=Object.keys(WEEKDAY_INDEX).find(day=>norm(first).startsWith(day.slice(0,3)));return WEEKDAY_INDEX[key]??dateFromISO(c.startDate||today()).getDay()}
+  function blockWeekday(block={}){const key=Object.keys(WEEKDAY_INDEX).find(day=>norm(block.day).startsWith(day.slice(0,3)));return WEEKDAY_INDEX[key]??null}
   function firstRecurringDate(startDate,weekday){let date=dateFromISO(startDate||today());for(let i=0;i<7&&date.getDay()!==weekday;i+=1)date=addDays(date,1);return date}
+  function liveScheduleBlocks(c){
+    if(norm(c.classType||c.type)!=='AO VIVO')return [];
+    return classBlocks(c).filter(block=>block?.day&&block?.time&&blockWeekday(block)!==null).map(block=>({...block,weekday:blockWeekday(block),firstDate:firstRecurringDate(c.startDate||today(),blockWeekday(block))})).sort((a,b)=>a.firstDate-b.firstDate||String(a.time).localeCompare(String(b.time)));
+  }
   function holidayList(){return [...(db().settings?.classHolidays||[]),...(db().classHolidays||[])].filter((item,index,arr)=>item?.date&&arr.findIndex(other=>other.date===item.date)===index)}
   function syncHolidayList(list){
     const normalized=(list||[]).filter(item=>item?.date).map(item=>({id:item.id||uid('hol'),date:item.date,name:norm(item.name||'FERIADO'),scope:norm(item.scope||'NACIONAL')}));
@@ -783,7 +788,20 @@
     return skipped?`Aula movida: ${typeof skipped==='string'?'sem aula nesta data':(skipped.reason||'sem aula nesta data')}`:'';
   }
   function generateSchedulePreview(c,templateId,startDate=c.startDate||today()){
-    const template=scheduleTemplate(templateId),groups=groupedTemplateBlocks(template),weekday=classWeekday(c),time=classBlocks(c)[0]?.time||'',ignored=[];
+    const template=scheduleTemplate(templateId),liveBlocks=liveScheduleBlocks(c),ignored=[];
+    if(liveBlocks.length>1){
+      const cursors=liveBlocks.map(block=>firstRecurringDate(startDate,block.weekday)),blocks=(template.blocks||[]).slice().sort((a,b)=>Number(a.order)-Number(b.order));
+      let guard=0;
+      const meetings=blocks.map((block,index)=>{
+        const lane=index%liveBlocks.length,slot=liveBlocks[lane];let cursor=cursors[lane];
+        while(blockedReason(iso(cursor),c)&&guard<520){ignored.push({date:iso(cursor),reason:blockedReason(iso(cursor),c)});cursor=addDays(cursor,7);guard+=1}
+        cursors[lane]=addDays(cursor,7);
+        const encounterOrder=index+1,meetingBlock={...block,encounterOrder};
+        return {id:`${c.id}-m${String(encounterOrder).padStart(2,'0')}`,encounterOrder,date:iso(cursor),time:slot.time,room:slot.room||c.room||'',scheduleBlockIndex:lane,blockIds:[block.id],blocks:[meetingBlock]};
+      });
+      return {templateId:template.id,templateTitle:template.title,templateVersion:template.version,status:'preview',classId:c.id,startDate,weekday:null,time:liveBlocks.map(block=>`${block.day} ${block.time}`).join(' • '),liveSplit:true,blockCount:template.blocks.length,meetingCount:meetings.length,projectedEndDate:meetings.at(-1)?.date||'',ignored,meetings,createdAt:new Date().toISOString()};
+    }
+    const groups=groupedTemplateBlocks(template),weekday=classWeekday(c),time=classBlocks(c)[0]?.time||'';
     let cursor=firstRecurringDate(startDate,weekday),guard=0;
     const meetings=groups.map(group=>{
       while(blockedReason(iso(cursor),c)&&guard<260){ignored.push({date:iso(cursor),reason:blockedReason(iso(cursor),c)});cursor=addDays(cursor,7);guard+=1}
@@ -841,6 +859,17 @@
     const c=(db().classes||[]).find(item=>item.id===classId),schedule=classGeneratedSchedule(classId);
     if(!c||!schedule)return null;
     normalizeScheduleOrder(schedule);
+    const liveBlocks=liveScheduleBlocks(c);
+    if(schedule.liveSplit&&liveBlocks.length>1){
+      const cursors=liveBlocks.map(block=>firstRecurringDate(schedule.startDate||c.startDate||today(),block.weekday)),ignored=[];let guard=0;
+      scheduleMeetings(schedule).forEach((meeting,index)=>{
+        const lane=Number.isInteger(meeting.scheduleBlockIndex)?meeting.scheduleBlockIndex:index%liveBlocks.length,slot=liveBlocks[lane]||liveBlocks[index%liveBlocks.length];let cursor=cursors[lane]||firstRecurringDate(schedule.startDate||c.startDate||today(),slot.weekday);
+        let reason=scheduleBlockedReason(iso(cursor),c,schedule);
+        while(reason&&guard<520){ignored.push({date:iso(cursor),reason});cursor=addDays(cursor,7);guard+=1;reason=scheduleBlockedReason(iso(cursor),c,schedule)}
+        meeting.date=iso(cursor);meeting.time=slot.time;meeting.room=slot.room||c.room||'';meeting.scheduleBlockIndex=lane;cursors[lane]=addDays(cursor,7);
+      });
+      schedule.ignored=ignored;schedule.projectedEndDate=scheduleMeetings(schedule).at(-1)?.date||'';c.projectedEndDate=schedule.projectedEndDate;return schedule;
+    }
     const weekday=classWeekday(c),ignored=[],time=classBlocks(c)[0]?.time||schedule.time||'';
     let cursor=firstRecurringDate(schedule.startDate||c.startDate||today(),weekday),guard=0;
     for(const meeting of scheduleMeetings(schedule)){
