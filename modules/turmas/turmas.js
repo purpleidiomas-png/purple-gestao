@@ -22,6 +22,7 @@
   const user=()=>state().user||{};
   const can=permission=>Boolean(user()?.permissions?.[permission]);
   const canEdit=()=>user().role!=='viewer'&&(can('reports.edit')||can('reports.create')||can('panel.view'));
+  const canManageSchedule=()=>['direction','leader'].includes(user().role)||can('classes.edit')||can('schedules.edit')||can('twr.manage');
   const teacherLabel=id=>(db().teachers||[]).find(t=>t.id===id)?.name||'Professor não vinculado';
   const bookToken=value=>norm(String(value||''));
   const bookMatches=(item,id)=>{const token=bookToken(id);return token&&[item?.id,item?.supabaseId,item?.legacyId,item?.key,item?.code,item?.internal_code,item?.sku,item?.name,item?.title,item?.bookName,item?.label].some(value=>bookToken(value)===token)};
@@ -88,6 +89,7 @@
   const INSPIRE_TEMPLATE_ID='inspire-oficial-v1';
   const TRAVEL_TEMPLATE_ID='travel-oficial-v1';
   const YOUNG_LEARNERS_3_TEMPLATE_ID='young-learners-3-oficial-v1';
+  const YOUNG_LEARNERS_4_TEMPLATE_ID='young-learners-4-oficial-v1';
   const SUPER_KIDS_STARTER_TEMPLATE_ID='super-kids-starter-oficial-v1';
   const SUPER_KIDS_1_TEMPLATE_ID='super-kids-1-oficial-v1';
   const SUPER_KIDS_2_TEMPLATE_ID='super-kids-2-oficial-v1';
@@ -399,6 +401,54 @@
     [37,19,'Skillcheck','Skillcheck','SKILLCHECK','Regular Class','Pages + guided practice'],
     [38,19,'Skillcheck','Skillcheck','SKILLCHECK','Regular Class','Pages + guided practice']
   ];
+  const YOUNG_LEARNERS_4_OFFICIAL_BLOCKS=[
+    [1,1,'','Welcoming Class','Welcoming Class','Regular Class','Pages + guided practice'],
+    [2,1,'','Welcoming Class','Welcoming Class','Regular Class','Pages + guided practice'],
+    [3,2,'5-16','Unit 1','Unit 1','Regular Class','Pages + guided practice'],
+    [4,2,'5-16','Unit 1','Unit 1','Regular Class','Pages + guided practice'],
+    [5,3,'5-16','Unit 1','Unit 1','Regular Class','Pages + guided practice'],
+    [6,3,'17-28','Unit 2','Unit 2','Regular Class','Pages + guided practice'],
+    [7,4,'17-28','Unit 2','Unit 2','Regular Class','Pages + guided practice'],
+    [8,4,'17-28','Unit 2','Unit 2','Regular Class','Pages + guided practice'],
+    [9,5,'29-40','Unit 3','Unit 3','Regular Class','Pages + guided practice'],
+    [10,5,'29-40','Unit 3','Unit 3','Regular Class','Pages + guided practice'],
+    [11,6,'29-40','Unit 3','Unit 3','Regular Class','Pages + guided practice'],
+    [12,6,'41-52','Unit 4','Unit 4','Regular Class','Pages + guided practice'],
+    [13,7,'41-52','Unit 4','Unit 4','Regular Class','Pages + guided practice'],
+    [14,7,'41-52','Unit 4','Unit 4','Regular Class','Pages + guided practice'],
+    [15,8,'53-64','Unit 5','Unit 5','Regular Class','Pages + guided practice'],
+    [16,8,'53-64','Unit 5','Unit 5','Regular Class','Pages + guided practice'],
+    [17,9,'53-64','Unit 5','Unit 5','Regular Class','Pages + guided practice'],
+    [18,9,'65-76','Unit 6','Unit 6','Regular Class','Pages + guided practice'],
+    [19,10,'65-76','Unit 6','Unit 6','Regular Class','Pages + guided practice'],
+    [20,10,'65-76','Unit 6','Unit 6','Regular Class','Pages + guided practice'],
+    [21,11,'77-88','Unit 7','Unit 7','Regular Class','Pages + guided practice'],
+    [22,11,'77-88','Unit 7','Unit 7','Regular Class','Pages + guided practice'],
+    [23,12,'77-88','Unit 7','Unit 7','Regular Class','Pages + guided practice'],
+    [24,12,'89-100','Unit 8','Unit 8','Regular Class','Pages + guided practice'],
+    [25,13,'89-100','Unit 8','Unit 8','Regular Class','Pages + guided practice'],
+    [26,13,'89-100','Unit 8','Unit 8','Regular Class','Pages + guided practice'],
+    [27,14,'101-112','Unit 9','Unit 9','Regular Class','Pages + guided practice'],
+    [28,14,'101-112','Unit 9','Unit 9','Regular Class','Pages + guided practice'],
+    [29,15,'101-112','Unit 9','Unit 9','Regular Class','Pages + guided practice'],
+    [30,15,'113-124','Unit 10','Unit 10','Regular Class','Pages + guided practice'],
+    [31,16,'113-124','Unit 10','Unit 10','Regular Class','Pages + guided practice'],
+    [32,16,'113-124','Unit 10','Unit 10','Regular Class','Pages + guided practice'],
+    [33,17,'125-136','Unit 11','Unit 11','Regular Class','Pages + guided practice'],
+    [34,17,'125-136','Unit 11','Unit 11','Regular Class','Pages + guided practice'],
+    [35,18,'125-136','Unit 11','Unit 11','Regular Class','Pages + guided practice'],
+    [36,18,'137-148','Unit 12','Unit 12','Regular Class','Pages + guided practice'],
+    [37,19,'137-148','Unit 12','Unit 12','Regular Class','Pages + guided practice'],
+    [38,19,'137-148','Unit 12','Unit 12','Regular Class','Pages + guided practice'],
+    [39,20,'149-160','Unit 13','Unit 13','Regular Class','Pages + guided practice'],
+    [40,20,'149-160','Unit 13','Unit 13','Regular Class','Pages + guided practice'],
+    [41,21,'149-160','Unit 13','Unit 13','Regular Class','Pages + guided practice'],
+    [42,21,'200-204','Unit 14','Unit 14','Regular Class','Pages + guided practice'],
+    [43,22,'200-204','Unit 14','Unit 14','Regular Class','Pages + guided practice'],
+    [44,22,'200-204','Unit 14','Unit 14','Regular Class','Pages + guided practice'],
+    [45,23,'Final Test','Final Test','FINAL TEST','Final Exam','Oral practice + checkpoint'],
+    [46,23,'Final Test','Final Test','FINAL TEST','Final Exam','Oral practice + checkpoint']
+  ];
   const SUPER_KIDS_STARTER_OFFICIAL_BLOCKS=[
     [1,1,'','Welcoming Class','Welcoming Class','Regular Class','Pages + guided practice'],
     [2,1,'','Welcoming Class','Welcoming Class','Regular Class','Pages + guided practice'],
@@ -675,6 +725,7 @@
       officialScheduleTemplate(t,INSPIRE_TEMPLATE_ID,{stableKey:'inspire-oficial',title:'INSPIRE - Modelo Oficial',book:'INSPIRE',source:'INSPIRE ATUALIZADO - MODELO INSPIRE.pdf',notes:'Modelo oficial Inspire atualizado. Base sem datas fixas: 42 horas-aula em 21 encontros, com páginas, unidade/aula, tipo e foco.',blockPrefix:'inspire-oficial',blocks:INSPIRE_OFFICIAL_BLOCKS}),
       officialScheduleTemplate(t,TRAVEL_TEMPLATE_ID,{stableKey:'travel-oficial',title:'TRAVEL - Modelo Oficial',book:'TRAVEL',source:'TRAVEL ATUALIZADO - MODELO TRAVEL.pdf',notes:'Modelo oficial Travel atualizado. Base sem datas fixas: 42 horas-aula em 21 encontros, com páginas, unidade/aula, tipo e foco.',blockPrefix:'travel-oficial',blocks:TRAVEL_OFFICIAL_BLOCKS}),
       officialScheduleTemplate(t,YOUNG_LEARNERS_3_TEMPLATE_ID,{stableKey:'young-learners-3-oficial',title:'YOUNG LEARNERS 3 - Modelo Oficial',book:'YOUNG LEARNERS 3',source:'YOUNG LEARNERS 3 ATUALIZADO - MODELO Y.L .pdf',notes:'Modelo oficial Young Learners 3 atualizado. Base sem datas fixas: 38 horas-aula em 19 encontros extraidos da tabela, com paginas, unidade/aula, tipo e foco.',blockPrefix:'yl3-oficial',blocks:YOUNG_LEARNERS_3_OFFICIAL_BLOCKS}),
+      officialScheduleTemplate(t,YOUNG_LEARNERS_4_TEMPLATE_ID,{stableKey:'young-learners-4-oficial',title:'YOUNG LEARNERS 4 - Modelo Oficial',book:'YOUNG LEARNERS 4',source:'CRONOGRAMA YL4 ATUALIZADO - MODELO YL4.pdf',notes:'Modelo oficial Young Learners 4 atualizado. Base sem datas fixas: 46 horas-aula em 23 encontros, com paginas, unidade/aula, tipo e foco.',blockPrefix:'yl4-oficial',blocks:YOUNG_LEARNERS_4_OFFICIAL_BLOCKS}),
       officialScheduleTemplate(t,SUPER_KIDS_STARTER_TEMPLATE_ID,{stableKey:'super-kids-starter-oficial',title:'SUPER KIDS STARTER - Modelo Oficial',book:'SUPER KIDS STARTER',source:'SUPER KIDS STARTER - MODELO S.K STARTER.pdf',notes:'Modelo oficial Super Kids Starter atualizado. Base sem datas fixas: 42 horas-aula em 21 encontros, com páginas, unidade/aula, tipo e foco.',blockPrefix:'sk-starter-oficial',blocks:SUPER_KIDS_STARTER_OFFICIAL_BLOCKS}),
       officialScheduleTemplate(t,SUPER_KIDS_1_TEMPLATE_ID,{stableKey:'super-kids-1-oficial',title:'SUPER KIDS 1 - Modelo Oficial',book:'SUPER KIDS 1',source:'Super Kids 1 Atualizado - MODELO SUPER KIDS 1.pdf',notes:'Modelo oficial Super Kids 1 atualizado. Base sem datas fixas: 42 horas-aula em 21 encontros, com páginas, unidade/aula, tipo e foco.',blockPrefix:'sk1-oficial',blocks:SUPER_KIDS_1_OFFICIAL_BLOCKS}),
       officialScheduleTemplate(t,SUPER_KIDS_2_TEMPLATE_ID,{stableKey:'super-kids-2-oficial',title:'SUPER KIDS 2 - Modelo Oficial',book:'SUPER KIDS 2',source:'SUPER KIDS 2 - Modelo SK 2.pdf',notes:'Modelo oficial Super Kids 2 atualizado. Base sem datas fixas: 44 horas-aula em 22 encontros, com páginas, unidade/aula, tipo e foco.',blockPrefix:'sk2-oficial',blocks:SUPER_KIDS_2_OFFICIAL_BLOCKS}),
@@ -999,13 +1050,43 @@
     if(schedule){
       const meetings=scheduleMeetings(schedule),selected=meetings.find(meeting=>meeting.id===ensure().activeMeetingId)||todayMeeting(c)||meetings[0];
       const selectedIndex=Math.max(0,meetings.findIndex(meeting=>meeting.id===selected?.id)),prevMeeting=meetings[selectedIndex-1],nextMeeting=meetings[selectedIndex+1];
-      return `<section class="panel turma-schedule-premium"><div class="schedule-compact-head"><div><span class="eyebrow">${esc(schedule.templateTitle)}</span><h3>Cronograma</h3><p><b>${fmtNumber(progress.done)} de ${fmtNumber(progress.planned)} HA</b> realizadas · ${fmtNumber(progress.percent)}% · conclusão prevista ${fmtDate(schedule.projectedEndDate)}</p><div class="schedule-progress"><span style="width:${Math.min(100,Math.max(0,Number(progress.percent)||0))}%"></span></div></div><div class="section-actions schedule-head-actions"><button class="btn primary small" onclick="PurpleTurmas.insertLesson('${esc(c.id)}')">Inserir aula</button><div class="schedule-stepper" aria-label="Navegação entre aulas"><button class="btn ghost small" ${prevMeeting?'':"disabled"} onclick="PurpleTurmas.jumpMeeting('${esc(c.id)}','prev')">Aula anterior</button><button class="btn ghost small" ${nextMeeting?'':"disabled"} onclick="PurpleTurmas.jumpMeeting('${esc(c.id)}','next')">Próxima aula</button></div><details class="action-menu" onclick="event.stopPropagation()"><summary aria-label="Ações do cronograma">•••</summary><div><button onclick="PurpleTurmas.previewSchedule('${esc(c.id)}')">Regerar preview</button></div></details></div></div>${selected?renderMeetingClassroom(c,selected):''}<div class="schedule-timeline compact">${meetings.map(meeting=>{const done=meetingDone(c,meeting),status=meetingStatus(c,meeting),firstBlock=(meeting.blocks||[])[0]||{};return `<article class="schedule-node ${meeting.id===selected?.id?'active':''} ${meeting.localChange?'local-change':''} ${meeting.status==='cancelled'?'cancelled':''} ${done?'done':''}" role="button" tabindex="0" onclick="PurpleTurmas.openMeeting('${esc(c.id)}','${esc(meeting.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PurpleTurmas.openMeeting('${esc(c.id)}','${esc(meeting.id)}')}"><time><b>${fmtDate(meeting.date)}</b><small>${esc(meeting.time||'--')}</small></time><div><div class="schedule-node-head"><h4><i aria-hidden="true"></i> Encontro ${String(meeting.encounterOrder).padStart(2,'0')}</h4></div><p><b>${esc(firstBlock.unit||'Unit')}</b><small>${(meeting.blocks||[]).map(block=>`${esc(block.title)}${block.bookPages?` · p. ${esc(block.bookPages)}`:''}`).join(' / ')}</small></p></div><div class="timeline-actions"><span class="timeline-status">${esc(status)}</span><button class="btn primary small" onclick="event.stopPropagation();PurpleTurmas.openMeeting('${esc(c.id)}','${esc(meeting.id)}')">Abrir</button><details class="action-menu" onclick="event.stopPropagation()"><summary aria-label="Ações do encontro">•••</summary><div><button onclick="PurpleTurmas.completePlanned('${esc(c.id)}','${esc(meeting.id)}')">${done?'Desmarcar confirmação':'Confirmar aula'}</button><button onclick="PurpleTurmas.registerDivergence('${esc(c.id)}','${esc(meeting.id)}')">Registrar divergência</button><button onclick="PurpleTurmas.postponeMeeting('${esc(c.id)}','${esc(meeting.id)}')">Mover aula e recalcular</button><button class="danger" onclick="PurpleTurmas.cancelMeeting('${esc(c.id)}','${esc(meeting.id)}')">Cancelar / não realizada</button></div></details></div></article>`}).join('')}</div></section>`;
+      return `<section class="panel turma-schedule-premium"><div class="schedule-compact-head"><div><span class="eyebrow">${esc(schedule.templateTitle)}</span><h3>Cronograma</h3><p><b>${fmtNumber(progress.done)} de ${fmtNumber(progress.planned)} HA</b> realizadas · ${fmtNumber(progress.percent)}% · conclusão prevista ${fmtDate(schedule.projectedEndDate)}</p><div class="schedule-progress"><span style="width:${Math.min(100,Math.max(0,Number(progress.percent)||0))}%"></span></div></div><div class="section-actions schedule-head-actions">${canManageSchedule()?`<button class="btn primary small" onclick="PurpleTurmas.insertLesson('${esc(c.id)}')">Inserir aula</button>`:''}<div class="schedule-stepper" aria-label="Navegação entre aulas"><button class="btn ghost small" ${prevMeeting?'':"disabled"} onclick="PurpleTurmas.jumpMeeting('${esc(c.id)}','prev')">Aula anterior</button><button class="btn ghost small" ${nextMeeting?'':"disabled"} onclick="PurpleTurmas.jumpMeeting('${esc(c.id)}','next')">Próxima aula</button></div>${canManageSchedule()?`<details class="action-menu" onclick="event.stopPropagation()"><summary aria-label="Ações do cronograma">•••</summary><div><button onclick="PurpleTurmas.previewSchedule('${esc(c.id)}')">Regerar preview</button></div></details>`:''}</div></div>${selected?renderMeetingClassroom(c,selected):''}<div class="schedule-timeline compact">${meetings.map(meeting=>{const done=meetingDone(c,meeting),status=meetingStatus(c,meeting),firstBlock=(meeting.blocks||[])[0]||{};return `<article class="schedule-node ${meeting.id===selected?.id?'active':''} ${meeting.localChange?'local-change':''} ${meeting.status==='cancelled'?'cancelled':''} ${done?'done':''}" role="button" tabindex="0" onclick="PurpleTurmas.openMeeting('${esc(c.id)}','${esc(meeting.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PurpleTurmas.openMeeting('${esc(c.id)}','${esc(meeting.id)}')}"><time><b>${fmtDate(meeting.date)}</b><small>${esc(meeting.time||'--')}</small></time><div><div class="schedule-node-head"><h4><i aria-hidden="true"></i> Encontro ${String(meeting.encounterOrder).padStart(2,'0')}</h4></div><p><b>${esc(firstBlock.unit||'Unit')}</b><small>${(meeting.blocks||[]).map(block=>`${esc(block.title)}${block.bookPages?` · p. ${esc(block.bookPages)}`:''}`).join(' / ')}</small></p></div><div class="timeline-actions"><span class="timeline-status">${esc(status)}</span><button class="btn primary small" onclick="event.stopPropagation();PurpleTurmas.openMeeting('${esc(c.id)}','${esc(meeting.id)}')">Abrir</button><details class="action-menu" onclick="event.stopPropagation()"><summary aria-label="Ações do encontro">•••</summary><div><button onclick="PurpleTurmas.completePlanned('${esc(c.id)}','${esc(meeting.id)}')">${done?'Desmarcar confirmação':'Confirmar aula'}</button><button onclick="PurpleTurmas.registerDivergence('${esc(c.id)}','${esc(meeting.id)}')">Registrar divergência</button>${canManageSchedule()?`<button onclick="PurpleTurmas.postponeMeeting('${esc(c.id)}','${esc(meeting.id)}')">Mover aula e recalcular</button><button class="danger" onclick="PurpleTurmas.cancelMeeting('${esc(c.id)}','${esc(meeting.id)}')">Cancelar / não realizada</button><button class="danger" onclick="PurpleTurmas.deleteMeeting('${esc(c.id)}','${esc(meeting.id)}')">Excluir encontro</button>`:''}</div></details></div></article>`}).join('')}</div></section>`;
     }
-    return `<section class="panel class-empty-schedule"><div class="panel-head"><div><h3>Cronograma</h3><small>Grade oficial preservada do cadastro de Turmas. Gere o cronograma real a partir de um cronograma base.</small></div><button class="btn primary small" onclick="PurpleTurmas.previewSchedule('${esc(c.id)}')">Gerar cronograma</button></div><div class="class-block-list">${classBlocks(c).map(b=>`<article><span>${esc(b.day||'--')}</span><b>${esc(b.time||'--')}</b><small>${esc(b.room||c.room||'Sala não informada')}</small></article>`).join('')||'<div class="empty"><p>Sem grade cadastrada.</p></div>'}</div></section>`;
+    return `<section class="panel class-empty-schedule"><div class="panel-head"><div><h3>Cronograma</h3><small>Grade oficial preservada do cadastro de Turmas. Gere o cronograma real a partir de um cronograma base.</small></div>${canManageSchedule()?`<button class="btn primary small" onclick="PurpleTurmas.previewSchedule('${esc(c.id)}')">Gerar cronograma</button>`:''}</div><div class="class-block-list">${classBlocks(c).map(b=>`<article><span>${esc(b.day||'--')}</span><b>${esc(b.time||'--')}</b><small>${esc(b.room||c.room||'Sala não informada')}</small></article>`).join('')||'<div class="empty"><p>Sem grade cadastrada.</p></div>'}</div></section>`;
   }
   function renderMeetingClassroom(c,meeting){
     const summary=attendanceSummary(c,meeting),note=ensure().meetingNotes[`${c.id}::${meeting.id}`],done=meetingDone(c,meeting);
-    return `<section class="panel meeting-classroom-panel ${done?'done':''}"><div class="panel-head"><div><span class="eyebrow">Aula selecionada</span><h3>Encontro ${String(meeting.encounterOrder).padStart(2,'0')}</h3><small>${fmtDate(meeting.date)} · ${esc(meeting.time||'Horário a confirmar')} · chamada vinculada a este encontro</small></div><div class="section-actions"><button class="btn ${done?'success':'primary'} small" onclick="PurpleTurmas.completePlanned('${esc(c.id)}','${esc(meeting.id)}')">${done?'Aula confirmada':'Confirmar aula'}</button><button class="btn soft small" onclick="PurpleTurmas.allPresent('${esc(c.id)}','${esc(meeting.id)}')">Todos presentes</button><button class="btn ghost small" onclick="PurpleTurmas.replanContent('${esc(c.id)}','${esc(meeting.id)}')">Ajustar conteúdo</button><button class="btn ghost small" onclick="PurpleTurmas.noteClass('${esc(c.id)}','${esc(meeting.id)}')">Registrar aula</button></div></div><div class="meeting-classroom-grid"><div class="meeting-content-pane"><div class="pane-kicker">Conteúdo</div><div class="turma-lesson-focus">${(meeting.blocks||[]).map(block=>`<div class="today-block"><div><strong>Bloco ${block.order} · ${esc(block.title)}</strong><span>${esc(block.content)}</span></div><small>${esc(block.type||'Aula')} · Páginas: ${esc(block.bookPages||'--')}</small></div>`).join('')||'<p class="muted">Nenhum conteúdo vinculado a este encontro.</p>'}</div><div class="lesson-material-strip"><button class="btn ghost small" onclick="PurpleTurmas.openLesson('${esc((meeting.blocks||[])[0]?.lessonPlanRef||'')}')">Abrir plano</button><button class="btn ghost small" onclick="PurpleTurmas.openBook('${esc(c.bookId||'')}')">Abrir livro</button></div>${note?.text?`<div class="alert green"><div class="alert-icon">✓</div><div><b>Registro da aula</b><span>${esc(note.text)}</span></div></div>`:''}${note?.divergence?`<div class="alert yellow"><div class="alert-icon">!</div><div><b>Divergência registrada</b><span>${esc(note.divergence)}</span></div></div>`:''}</div><aside class="meeting-students-pane"><div class="meeting-students-head"><div><span class="eyebrow">Frequência</span><h3>Chamada</h3><small>${summary.present} presentes · ${summary.absent} faltas · ${summary.justified} justificadas · ${summary.replacement} reposições · ${summary.pending} pendentes</small></div></div><div class="attendance-list">${attendanceRows(c,meeting).map(row=>renderAttendanceRow(c,row,meeting)).join('')||'<div class="empty"><p>Nenhum aluno vinculado a esta turma.</p></div>'}</div></aside></div></section>`;
+    return `<section class="panel meeting-classroom-panel ${done?'done':''}"><div class="panel-head"><div><span class="eyebrow">Aula selecionada</span><h3>Encontro ${String(meeting.encounterOrder).padStart(2,'0')}</h3><small>${fmtDate(meeting.date)} · ${esc(meeting.time||'Horário a confirmar')} · chamada vinculada a este encontro</small></div><div class="section-actions"><button class="btn ${done?'success':'primary'} small" onclick="PurpleTurmas.completePlanned('${esc(c.id)}','${esc(meeting.id)}')">${done?'Aula confirmada':'Confirmar aula'}</button><button class="btn soft small" onclick="PurpleTurmas.allPresent('${esc(c.id)}','${esc(meeting.id)}')">Todos presentes</button>${canManageSchedule()?`<button class="btn ghost small" onclick="PurpleTurmas.replanContent('${esc(c.id)}','${esc(meeting.id)}')">Ajustar conteúdo</button>`:''}<button class="btn ghost small" onclick="PurpleTurmas.noteClass('${esc(c.id)}','${esc(meeting.id)}')">Registrar aula</button></div></div><div class="meeting-classroom-grid"><div class="meeting-content-pane"><div class="pane-kicker">Conteúdo</div><div class="turma-lesson-focus">${(meeting.blocks||[]).map(block=>`<div class="today-block"><div><strong>Bloco ${block.order} · ${esc(block.title)}</strong><span>${esc(block.content)}</span></div><small>${esc(block.type||'Aula')} · Páginas: ${esc(block.bookPages||'--')}</small></div>`).join('')||'<p class="muted">Nenhum conteúdo vinculado a este encontro.</p>'}</div><div class="lesson-material-strip"><button class="btn ghost small" onclick="PurpleTurmas.openLesson('${esc((meeting.blocks||[])[0]?.lessonPlanRef||'')}')">Abrir plano</button><button class="btn ghost small" onclick="PurpleTurmas.openBook('${esc(c.bookId||'')}')">Abrir livro</button></div>${note?.text?`<div class="alert green"><div class="alert-icon">✓</div><div><b>Registro da aula</b><span>${esc(note.text)}</span></div></div>`:''}${note?.divergence?`<div class="alert yellow"><div class="alert-icon">!</div><div><b>Divergência registrada</b><span>${esc(note.divergence)}</span></div></div>`:''}</div><aside class="meeting-students-pane"><div class="meeting-students-head"><div><span class="eyebrow">Frequência</span><h3>Chamada</h3><small>${summary.present} presentes · ${summary.absent} faltas · ${summary.justified} justificadas · ${summary.replacement} reposições · ${summary.pending} pendentes</small></div></div>${renderGradeHomeworkInlineAlert(c,meeting)}<div class="attendance-list">${attendanceRows(c,meeting).map(row=>renderAttendanceRow(c,row,meeting)).join('')||'<div class="empty"><p>Nenhum aluno vinculado a esta turma.</p></div>'}</div></aside></div></section>`;
+  }
+  function blockUnitNumber(block={}){
+    const text=[block.unit,block.title,block.topic].join(' ');
+    const match=String(text||'').match(/unit\s*0*(\d+)/i);
+    return match?Number(match[1]):0;
+  }
+  function meetingAfterUnitSeven(meeting){return Math.max(0,...(meeting?.blocks||[]).map(blockUnitNumber))>7}
+  function gradeHomeworkStatus(c){
+    const rows=classGradeRows(c),hasHomework=rows.some(row=>norm(row.type).includes('HOMEWORK')),hasGrade=rows.some(row=>performanceGradeTypes().some(type=>norm(row.type)===norm(type)));
+    return {rows,hasHomework,hasGrade,needs:!hasHomework||!hasGrade};
+  }
+  function shouldShowGradeHomeworkAlert(c,meeting){
+    return meetingAfterUnitSeven(meeting)&&gradeHomeworkStatus(c).needs;
+  }
+  function gradeHomeworkAlertItems(status){
+    const items=[];
+    if(!status.hasGrade)items.push('lançar notas de participação/desempenho');
+    if(!status.hasHomework)items.push('cobrar e registrar homework');
+    return items;
+  }
+  function renderGradeHomeworkInlineAlert(c,meeting){
+    if(!shouldShowGradeHomeworkAlert(c,meeting))return '';
+    const status=gradeHomeworkStatus(c),items=gradeHomeworkAlertItems(status);
+    return `<div class="alert red teacher-grade-homework-alert"><div class="alert-icon">!</div><div><b>Atenção: registros pedagógicos pendentes</b><span>Depois da Unit 7, esta turma precisa ${esc(items.join(' e '))}. Faça a chamada e aproveite para atualizar as notas/homework dos alunos.</span><div class="section-actions" style="justify-content:flex-start;margin-top:8px"><button class="btn primary small" onclick="PurpleTurmas.openClassGrade('${esc(c.id)}')">Lançar notas</button></div></div></div>`;
+  }
+  function openGradeHomeworkPopup(classId,meetingId){
+    const c=(db().classes||[]).find(item=>item.id===classId),meeting=scheduleMeetings(classGeneratedSchedule(classId)).find(item=>item.id===meetingId);
+    if(!c||!meeting||!shouldShowGradeHomeworkAlert(c,meeting))return;
+    const status=gradeHomeworkStatus(c),items=gradeHomeworkAlertItems(status);
+    showModal(`<div class="modal-head"><div><span class="eyebrow">Alerta do professor</span><h3>Notas e homework pendentes</h3><p class="helper">Esta turma já passou da Unit 7 e ainda precisa de registros pedagógicos no sistema.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="alert red teacher-grade-homework-popup"><div class="alert-icon">!</div><div><b>Antes de seguir, atualize a turma.</b><span>É necessário ${esc(items.join(' e '))}. Esse aviso aparece na chamada para lembrar o professor de cobrar homework e registrar as notas dos alunos.</span></div></div><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Continuar chamada</button><button class="btn primary" onclick="App.closeModal();PurpleTurmas.openClassGrade('${esc(c.id)}')">Lançar agora</button></div>`);
   }
   function classGradeRows(c){return (Array.isArray(c.gradeEntries)?c.gradeEntries:[]).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(a.studentName||'').localeCompare(String(b.studentName||'')))}
   function renderClassGrades(c){
@@ -1153,6 +1234,7 @@
   }
 
   function previewSchedule(classId,forcedTemplateId=''){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     const c=(db().classes||[]).find(item=>item.id===classId),templates=scheduleTemplates();
     if(!c)return toast('Turma não encontrada.');
     if(!templates.length)return toast('Cadastre um cronograma base primeiro.');
@@ -1161,12 +1243,14 @@
   }
 
   function showSchedulePreview(classId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     const c=(db().classes||[]).find(item=>item.id===classId),preview=generateSchedulePreview(c,$('#scheduleTemplateSelect')?.value,$('#scheduleStartDate')?.value);
     const blocked=previewBlockedDates(c,preview),blockedSummary=[...blocked.holidays.map(item=>`${fmtDate(item.date)} - ${esc(item.reason)}`),...blocked.recesses.map(item=>`${esc(item.reason)}`)];
     showModal(`<div class="modal-head"><div><span class="eyebrow">Preview antes de publicar</span><h3>${esc(preview.templateTitle)} v${esc(preview.templateVersion)}</h3><p class="helper">${fmtNumber(preview.blockCount)} blocos · ${fmtNumber(preview.meetingCount)} encontros · conclusão ${fmtDate(preview.projectedEndDate)}</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="turma-card-facts"><span><b>Início</b>${fmtDate(preview.startDate)}</span><span><b>Horário</b>${esc(preview.time||'--')}</span><span><b>Datas puladas</b>${fmtNumber(preview.ignored.length)}</span><span><b>Template</b>${esc(preview.templateTitle)}</span></div>${blockedSummary.length?`<div class="alert yellow"><div class="alert-icon">!</div><div><b>Feriados e recessos conferidos</b><span>${blockedSummary.join(' • ')}</span></div></div>`:''}${preview.ignored.length?`<div class="alert yellow"><div class="alert-icon">!</div><div><b>Datas sem aula que serão puladas</b><span>${preview.ignored.map(item=>`${fmtDate(item.date)} - ${esc(item.reason)}`).join(' • ')}</span></div></div>`:`<div class="alert green"><div class="alert-icon">✓</div><div><b>Nenhuma data bloqueada no caminho</b><span>O cronograma será gerado sem pular encontros por feriado ou recesso.</span></div></div>`}<div class="base-schedule-list preview">${preview.meetings.map(meeting=>`<article><h4>Encontro ${String(meeting.encounterOrder).padStart(2,'0')} · ${fmtDate(meeting.date)} · ${esc(meeting.time||'--')}</h4>${meeting.blocks.map(block=>`<p><b>Bloco ${block.order}</b> ${esc(block.title)} <small>${esc(block.bookPages)} · ${esc(block.content)}</small></p>`).join('')}</article>`).join('')}</div><div class="section-actions"><button class="btn ghost" onclick="PurpleTurmas.previewSchedule('${esc(classId)}','${esc(preview.templateId)}')">Voltar e ajustar</button><button class="btn primary" onclick="PurpleTurmas.publishSchedule('${esc(classId)}','${esc(preview.templateId)}','${esc(preview.startDate)}')">Confirmar e publicar</button></div>`);
   }
 
   async function publishSchedule(classId,templateId,startDate){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     const c=(db().classes||[]).find(item=>item.id===classId);
     const preview=generateSchedulePreview(c,templateId,startDate);
     preview.status='published';preview.publishedAt=new Date().toISOString();preview.publishedBy=user().name||'Purple';
@@ -1179,9 +1263,11 @@
   }
 
   function insertLesson(classId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     showModal(`<div class="modal-head"><div><span class="eyebrow">Ajuste desta turma</span><h3>Inserir aula</h3><p class="helper">Altera somente a instância desta turma.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="form-grid cols-2"><div class="field"><label>Título</label><input id="localLessonTitle" value="Reforço Unit 04"/></div><div class="field"><label>Tipo</label><select id="localLessonType">${BLOCK_TYPES.map(type=>`<option ${type==='REVIEW'?'selected':''}>${esc(type)}</option>`).join('')}</select></div><div class="field"><label>Quantidade de blocos</label><input id="localLessonBlocks" type="number" min="1" max="6" value="2"/></div><div class="field"><label>Páginas</label><input id="localLessonPages" placeholder="p. 30-40"/></div></div><div class="field"><label>Conteúdo</label><textarea id="localLessonContent">Reforço pedagógico conforme necessidade da turma.</textarea></div><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Cancelar</button><button class="btn primary" onclick="PurpleTurmas.saveInsertedLesson('${esc(classId)}')">Inserir e recalcular</button></div>`);
   }
   async function saveInsertedLesson(classId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     const schedule=classGeneratedSchedule(classId);if(!schedule)return toast('Publique um cronograma antes.');
     const count=Math.max(1,Number($('#localLessonBlocks')?.value||1)),maxOrder=Math.max(0,...schedule.meetings.flatMap(m=>(m.blocks||[]).map(b=>Number(b.order)||0))),nextEncounter=Math.max(0,...schedule.meetings.map(m=>Number(m.encounterOrder)||0))+1;
     const blocks=Array.from({length:count},(_,i)=>({id:uid('local-block'),order:maxOrder+i+1,encounterOrder:nextEncounter,title:$('#localLessonTitle')?.value.trim()||'Aula inserida',topic:$('#localLessonTitle')?.value.trim()||'Aula inserida',bookPages:$('#localLessonPages')?.value.trim()||'',content:$('#localLessonContent')?.value.trim()||'',type:$('#localLessonType')?.value||'REVIEW',localChange:true,notes:'Inserido na turma'}));
@@ -1211,6 +1297,7 @@
     return true;
   }
   function replanContent(classId,meetingId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     const schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId),template=scheduleTemplate(schedule?.templateId),groups=groupedTemplateBlocks(template);
     if(!schedule||!meeting||!groups.length)return toast('Cronograma base não encontrado para ajustar conteúdo.');
     const currentFirst=(meeting.blocks||[])[0],currentOrder=Number(currentFirst?.encounterOrder)||Number(meeting.encounterOrder)||1;
@@ -1218,6 +1305,7 @@
     showModal(`<div class="modal-head"><div><span class="eyebrow">Ajustar planejamento</span><h3>Reorganizar conteúdo ou data</h3><p class="helper">Use conteúdo quando a turma atrasou/adiantou matéria. Use pular data quando o conteúdo está correto, mas a aula não vai acontecer neste dia.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="field"><label>Conteúdo para este encontro</label><select id="replanStartGroup">${options}</select><small>Altera a sequência pedagógica a partir deste encontro. Datas, chamadas e alunos são preservados.</small></div><div class="alert yellow"><div class="alert-icon">!</div><div><b>A aula não vai acontecer nesta data?</b><span>Pule somente esta data. O mesmo encontro será movido para a próxima data válida, respeitando feriados e recessos, e o término da turma será recalculado.</span></div></div><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Cancelar</button><button class="btn soft" onclick="PurpleTurmas.skipMeetingDate('${esc(classId)}','${esc(meetingId)}')">Pular data e manter conteúdo</button><button class="btn primary" onclick="PurpleTurmas.saveReplanContent('${esc(classId)}','${esc(meetingId)}')">Aplicar sequência</button></div>`);
   }
   async function saveReplanContent(classId,meetingId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     const schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId),template=scheduleTemplate(schedule?.templateId),groups=groupedTemplateBlocks(template);
     if(!schedule||!meeting||!groups.length)return toast('Cronograma base não encontrado para ajustar conteúdo.');
     const startIndex=Number($('#replanStartGroup')?.value||0);
@@ -1247,6 +1335,7 @@
   }
   async function repeatMeeting(classId,meetingId){registerDivergence(classId,meetingId)}
   async function moveMeetingDate(classId,meetingId,{confirmFirst=true,message='Aula movida e cronograma recalculado.'}={}){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
     const schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId);
     if(!schedule||!meeting)return toast('Selecione um encontro do cronograma.');
     if(confirmFirst&&!confirm(`Mover o encontro ${String(meeting.encounterOrder).padStart(2,'0')} de ${fmtDate(meeting.date)} para a próxima data válida e recalcular os próximos encontros?`))return;
@@ -1275,6 +1364,24 @@
   }
   async function cancelMeeting(classId,meetingId){
     return postponeMeeting(classId,meetingId);
+  }
+  async function deleteMeeting(classId,meetingId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem excluir encontros.');
+    const schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId);
+    if(!schedule||!meeting)return toast('Encontro não encontrado.');
+    if(!confirm(`Excluir definitivamente o encontro ${String(meeting.encounterOrder).padStart(2,'0')} de ${fmtDate(meeting.date)}? Esta ação remove a chamada vinculada a esta aula.`))return;
+    const blockIds=new Set((meeting.blocks||[]).map(block=>block.id).filter(Boolean));
+    schedule.meetings=(schedule.meetings||[]).filter(item=>item.id!==meetingId);
+    Object.keys(ensure().attendance||{}).filter(key=>key.startsWith(`${classId}::`)&&key.endsWith(`::${meetingId}`)).forEach(key=>delete ensure().attendance[key]);
+    delete ensure().meetingNotes[`${classId}::${meetingId}`];
+    Object.keys(ensure().blockExecution||{}).forEach(key=>{if(key.startsWith(`${classId}::`)&&blockIds.has(key.split('::')[1]))delete ensure().blockExecution[key]});
+    (db().students||[]).forEach(student=>{if(Array.isArray(student.attendanceEntries))student.attendanceEntries=student.attendanceEntries.filter(entry=>!(entry.classId===classId&&entry.meetingId===meetingId)&&entry.id!==`class-${classId}-${meetingId}`)});
+    normalizeScheduleOrder(schedule);
+    recalcSchedule(classId);
+    const meetings=scheduleMeetings(schedule);
+    ensure().activeMeetingId=meetings.find(item=>item.encounterOrder>=meeting.encounterOrder)?.id||meetings.at(-1)?.id||'';
+    await persist('Encontro excluído e cronograma recalculado.');
+    rerender();
   }
 
   function openHoliday(id=''){
@@ -1637,5 +1744,9 @@
     rerender();
   }
 
-  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting:(classId,meetingId)=>{ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender()},jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,verifyClass,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,cancelMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate}};
+  function openMeeting(classId,meetingId){
+    ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender();
+    setTimeout(()=>openGradeHomeworkPopup(classId,meetingId),80);
+  }
+  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting,jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,verifyClass,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,cancelMeeting,deleteMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate,shouldShowGradeHomeworkAlert,gradeHomeworkStatus,blockUnitNumber}};
 })();

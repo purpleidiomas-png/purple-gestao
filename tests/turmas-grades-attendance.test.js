@@ -37,6 +37,8 @@ require('../modules/turmas/turmas.js');
   assert.strictEqual(test.normalizeGradeScore('8.5'), 85, 'nota decimal em escala 10 deve virar percentual');
   assert.strictEqual(test.normalizeGradeScore(100), 100, 'nota 100 permanece 100%');
   assert.strictEqual(test.classStudents('class-sk2').length, 1, 'turma recupera aluno salvo com className legado');
+  assert.strictEqual(test.shouldShowGradeHomeworkAlert(window.PurpleState.db.classes[0], { blocks: [{ unit: 'Unit 7' }] }), false, 'Unit 7 ainda nao dispara alerta de notas/homework');
+  assert.strictEqual(test.shouldShowGradeHomeworkAlert(window.PurpleState.db.classes[0], { blocks: [{ unit: 'Unit 8' }] }), true, 'apos Unit 7 sem notas/homework dispara alerta');
 
   await api.setAttendance('class-test', 'stu-test', 'absent', '', { force: true });
   assert.strictEqual(test.attendanceStats('stu-test', 'class-test').percent, 0, 'falta reduz frequência');
@@ -76,6 +78,7 @@ require('../modules/turmas/turmas.js');
   await launch('Final Term', 79);
   await launch('Homework', 10, 'Unit 13');
   await launch('Homework', 8, 'Unit 14');
+  assert.strictEqual(test.shouldShowGradeHomeworkAlert(window.PurpleState.db.classes[0], { blocks: [{ unit: 'Unit 8' }] }), false, 'alerta some quando notas e homework existem');
   const summary = test.studentClassGradeSummary('stu-test', 'class-test');
   assert(Math.abs(summary.finalAverage - 86.6) < 0.2, 'média final deve usar apenas avaliações permitidas e homework consolidado');
   assert.strictEqual(summary.homeworkAverage, 90, 'homework 13/14 entra na média de homework');
