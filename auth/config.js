@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.13.88-delete-schedule-meeting',
-  serviceWorkerVersion:'purple-gestao-v314',
+  appVersion:'1.13.89-student-responsible-copy-address-contact',
+  serviceWorkerVersion:'purple-gestao-v315',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',
