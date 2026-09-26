@@ -885,6 +885,11 @@
   }
 
   function lessonMeta(c){
+    if(norm(c.category)==='AULAS EXTRAS'||norm(c.course).includes('CONVERSATION')){
+      const course={id:'conversation-club',name:'Conversation Club',title:'Conversation Club',units:[{id:'conversation-club-unit',title:'Conversation Club',lessons:[{id:'conversation-club-lesson',title:'Conversation Class',theme:'Conversation Club',bookPages:'--'}],studentBookPages:'--'}]};
+      const unit=course.units[0],lesson=unit.lessons[0],plan={theme:'Conversation Club',objective:'Oral practice',stages:[{title:'Conversation Class',content:'Oral practice',bookPages:'--'}]};
+      return {course,unit,lesson,plan};
+    }
     const w=lessonWorkspace(),courses=w.courses||[],bookName=norm(bookLabel(c.bookId,c)||c.course);
     const course=courses.find(item=>norm(item.id)===norm(c.bookId)||bookName.includes(norm(item.name))||norm(c.course).includes(norm(item.name)))||courses[0];
     const unit=(course?.units||[])[0],lesson=(unit?.lessons||[])[0],plan=w.lessonPlans?.[lesson?.id];
