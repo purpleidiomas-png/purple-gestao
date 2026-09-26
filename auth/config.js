@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.13.97-online-split-schedule-days',
-  serviceWorkerVersion:'purple-gestao-v323',
+  appVersion:'1.13.98-online-temporary-time-builder',
+  serviceWorkerVersion:'purple-gestao-v324',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',

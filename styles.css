@@ -1536,6 +1536,10 @@ th{font-size:9px}
 #modalRoot .classes-editor .mini-card>.form-grid.cols-3{grid-template-columns:minmax(130px,.9fr) minmax(190px,1.25fr) minmax(120px,.85fr)!important;align-items:end!important}
 #modalRoot .classes-editor .mini-card .field input,#modalRoot .classes-editor .mini-card .field select{width:100%!important;min-width:0!important}
 #modalRoot .classes-editor #classBlockTime1,#modalRoot .classes-editor #classBlockTime2{font-weight:850!important;letter-spacing:0!important}
+#modalRoot .classes-editor .class-time-builder{display:grid!important;grid-template-columns:1fr!important;gap:6px!important;align-items:center!important;width:100%!important}
+#modalRoot .classes-editor .class-time-custom{display:grid;grid-template-columns:minmax(84px,1fr) auto minmax(84px,1fr);gap:5px;align-items:center}
+#modalRoot .classes-editor .class-time-custom span{font-size:9px!important;font-weight:850!important;color:#7a7087!important;text-align:center!important;text-transform:uppercase!important}
+#modalRoot .classes-editor .class-time-custom input{padding-inline:5px!important}
 
 @media(max-width:900px){
   .app-shell.sidebar-fixed,.app-shell.sidebar-intelligent{grid-template-columns:1fr!important}
