@@ -95,6 +95,7 @@
   const SUPER_KIDS_2_TEMPLATE_ID='super-kids-2-oficial-v1';
   const SUPER_KIDS_3_TEMPLATE_ID='super-kids-3-oficial-v1';
   const SUPER_KIDS_4_TEMPLATE_ID='super-kids-4-oficial-v1';
+  const CONVERSATION_CLUB_TEMPLATE_ID='conversation-club-aula-livre-v1';
   const DISCOVER_OFFICIAL_BLOCKS=[
     [1,1,'','Welcoming Class','Welcoming Class','Regular Class','Pages + guided practice'],
     [2,1,'','Welcoming Class','Welcoming Class','Regular Class','Pages + guided practice'],
@@ -715,9 +716,16 @@
       blocks:config.blocks.map(([order,encounterOrder,pages,unit,title,type,content])=>({id:`${config.blockPrefix}-b${String(order).padStart(2,'0')}`,order,encounterOrder,unit,title,topic:title,bookPages:pages,content,activities:splitActivities(content),type,estimatedDuration:'1 HA',lessonPlanRef:'',resourceRefs:[],notes:''}))
     };
   }
+  function conversationClubBlocks(total=42){
+    return Array.from({length:total},(_,index)=>{
+      const order=index+1,encounterOrder=Math.ceil(order/2);
+      return [order,encounterOrder,'--','Aula livre','Conversation Club','CONVERSATION','Conversation Class'];
+    });
+  }
 
   function seedScheduleTemplates(t=ensure()){
     t.scheduleTemplates=[
+      officialScheduleTemplate(t,CONVERSATION_CLUB_TEMPLATE_ID,{stableKey:'conversation-club-aula-livre',title:'CONVERSATION CLUB - Aula Livre',book:'CONVERSATION CLUB',source:'Base interna Purple Gestão',notes:'Cronograma livre para Conversation Club e aulas extras. Não exige unidade, páginas ou livro. Use para registrar aula dada, presença, falta, reposição e observações.',blockPrefix:'conversation-club',blocks:conversationClubBlocks()}),
       officialScheduleTemplate(t,DISCOVER_TEMPLATE_ID,{stableKey:'discover-1-1-oficial',title:'DISCOVER 1.1 - Modelo Oficial',book:'DISCOVER 1.1',source:'DISCOVER ATUALIZADO - MODELO DISCOVER.pdf',notes:'Modelo oficial Discover atualizado. Base sem datas fixas: 42 horas-aula em 21 encontros, com páginas, unidade/aula, tipo e descrição.',blockPrefix:'discover-oficial',blocks:DISCOVER_OFFICIAL_BLOCKS}),
       officialScheduleTemplate(t,CONNECT_TEMPLATE_ID,{stableKey:'connect-1-2-oficial',title:'CONNECT 1.2 - Modelo Oficial',book:'CONNECT 1.2',source:'CONNECT ATUALIZADO - CONNECT 1.2 | QUINTA 19H.pdf',notes:'Modelo oficial Connect atualizado. Base sem datas fixas: 42 horas-aula em 21 encontros, com páginas, unidade/aula, tipo e foco.',blockPrefix:'connect-oficial',blocks:CONNECT_OFFICIAL_BLOCKS}),
       officialScheduleTemplate(t,EXPLORE_TEMPLATE_ID,{stableKey:'explore-oficial',title:'EXPLORE - Modelo Oficial',book:'EXPLORE',source:'EXPLORE ATUALIZADO - MODELO EXPLORE.pdf',notes:'Modelo oficial Explore atualizado. Base sem datas fixas: 42 horas-aula em 21 encontros, com páginas, unidade/aula, tipo e foco.',blockPrefix:'explore-oficial',blocks:EXPLORE_OFFICIAL_BLOCKS}),
@@ -737,6 +745,8 @@
   function splitActivities(content=''){return String(content).split(/\s+\|\s+|\s+-\s+/).map(item=>item.trim()).filter(Boolean).filter(item=>/^activity|^extra|^project|^presenting/i.test(item))}
   function scheduleTemplates(){return ensure().scheduleTemplates.slice().sort((a,b)=>String(a.title).localeCompare(String(b.title))||Number(b.version)-Number(a.version))}
   function scheduleTemplate(id){return ensure().scheduleTemplates.find(item=>item.id===id)||scheduleTemplates()[0]||null}
+  function isConversationClass(c={}){return norm(c.category)==='AULAS EXTRAS'||norm(c.course).includes('CONVERSATION')||norm(c.name).includes('CONVERSATION')}
+  function defaultScheduleTemplateId(c={}){if(isConversationClass(c))return CONVERSATION_CLUB_TEMPLATE_ID;const haystack=norm([c.course,c.name,c.bookName,bookLabel(c.bookId,c)].join(' '));const match=scheduleTemplates().find(template=>haystack.includes(norm(template.book))||haystack.includes(norm(template.title).replace(' MODELO OFICIAL','')));return match?.id||scheduleTemplates()[0]?.id||''}
   function groupedTemplateBlocks(template){const groups=[];for(const block of (template?.blocks||[]).slice().sort((a,b)=>Number(a.order)-Number(b.order))){let group=groups.find(item=>item.encounterOrder===block.encounterOrder);if(!group){group={encounterOrder:block.encounterOrder,blocks:[]};groups.push(group)}group.blocks.push(block)}return groups.sort((a,b)=>Number(a.encounterOrder)-Number(b.encounterOrder))}
   function classGeneratedSchedule(classId){return ensure().generatedSchedules[classId]||null}
   function dateFromISO(value){const date=value?new Date(`${value}T12:00:00`):new Date();date.setHours(12,0,0,0);return date}
@@ -1243,7 +1253,7 @@
     const c=(db().classes||[]).find(item=>item.id===classId),templates=scheduleTemplates();
     if(!c)return toast('Turma não encontrada.');
     if(!templates.length)return toast('Cadastre um cronograma base primeiro.');
-    const selected=forcedTemplateId||classGeneratedSchedule(classId)?.templateId||templates[0].id,holidays=holidayList(),recesses=recessList(c);
+    const selected=forcedTemplateId||classGeneratedSchedule(classId)?.templateId||defaultScheduleTemplateId(c)||templates[0].id,holidays=holidayList(),recesses=recessList(c);
     showModal(`<div class="modal-head"><div><span class="eyebrow">Gerar cronograma da turma</span><h3>${esc(c.name)}</h3><p class="helper">Confira a data inicial, feriados e recessos antes de publicar.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="form-grid cols-2"><div class="field"><label>Cronograma base</label><select id="scheduleTemplateSelect">${templates.map(template=>`<option value="${esc(template.id)}" ${template.id===selected?'selected':''}>${esc(template.title)} v${esc(template.version)} (${esc(template.status)})</option>`).join('')}</select></div><div class="field"><label>Data inicial</label><input id="scheduleStartDate" type="date" value="${esc(c.startDate||today())}"/></div></div><div class="turma-card-facts"><span><b>Feriados cadastrados</b>${fmtNumber(holidays.length)}</span><span><b>Recessos da turma</b>${fmtNumber(recesses.length)}</span><span><b>Horário</b>${esc(classBlocks(c)[0]?.time||'--')}</span><span><b>Dia</b>${esc(classBlocks(c)[0]?.day||'--')}</span></div>${holidays.length||recesses.length?`<div class="alert yellow"><div class="alert-icon">!</div><div><b>Datas que podem afetar o cronograma</b><span>${[...holidays.map(item=>`${fmtDate(item.date)} - ${esc(item.name||'Feriado')}`),...recesses.map(item=>`${fmtDate(item.start)} a ${fmtDate(item.end)} - Recesso`)].join(' • ')}</span></div></div>`:''}<div class="section-actions"><button class="btn ghost" onclick="PurpleTurmas.chooseClassForTemplate('${esc(selected)}')">Trocar turma</button><button class="btn primary" onclick="PurpleTurmas.showSchedulePreview('${esc(classId)}')">Ver preview</button></div>`);
   }
 
