@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.13.94-online-schedule-field-fix',
-  serviceWorkerVersion:'purple-gestao-v320',
+  appVersion:'1.13.95-online-room-option',
+  serviceWorkerVersion:'purple-gestao-v321',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',
