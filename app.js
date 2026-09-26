@@ -193,7 +193,10 @@ function renderShellIcons(){
 function safeCatalogList(...keys){for(const key of keys){const list=State?.db?.[key];if(Array.isArray(list))return list}return []}
 function catalogMatchToken(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase()}
 function catalogLabelById(id,keys=['classes'],labelFields=['name','title','label','courseName']){if(!id)return '—';const list=safeCatalogList(...keys),token=catalogMatchToken(id);const found=list.find(item=>[item?.id,item?.supabaseId,item?.legacyId,item?.key,item?.code,item?.internal_code,item?.sku,item?.name,item?.title,item?.bookName,item?.label].some(value=>catalogMatchToken(value)===token));if(!found)return String(id).trim()||'—';for(const field of labelFields){const value=found?.[field];if(value)return String(value)}return String(found?.name||found?.title||found?.bookName||found?.label||found?.internal_code||found?.code||id||'—')}
-function classLabelById(id){return catalogLabelById(id,['classes','turmas'],['name','title','label'])}
+const LEGACY_CLASS_LINKS={
+  'class-1787175471789-0575f7':{id:'class-1790189121649-15924d',name:'YOUNG LEARNERS 3.1',schedule:'SEGUNDA-FEIRA 14:00 ÀS 16:10',teacherId:'teach-1789672187882-1180ac',teacherName:'ANA LAURA',bookId:'20a62362-6344-4b80-a4a9-ba32198fdaac',bookName:'YOUNG LEARNERS 3',course:'YOUNG LEARNERS',level:'3'}
+};
+function classLabelById(id){const legacy=LEGACY_CLASS_LINKS[String(id||'')];return legacy?.name||catalogLabelById(id,['classes','turmas'],['name','title','label'])}
 function teacherLabelById(id){return catalogLabelById(id,['teachers','professors','users'],['name','fullName','displayName','title'])}
 function bookLabelById(id){return catalogLabelById(id,['books','library','inventory'],['name','title','bookName','label'])}
 
@@ -1021,7 +1024,34 @@ function mergeLocalTeacherCache(db){const cache=readLocalCatalogCache();if(cache
 function mergeLocalStudentCache(db){const cache=readLocalCatalogCache();if(!Array.isArray(cache?.students))return;const removed=new Set(cache.deletedStudentIds||[]),remote=(db.students||[]).filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId));db.students=mergeRecords(remote,cache.students.filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId)))}
 function mergeLocalLessonPlansCache(db){const cache=readLocalCatalogCache();if(!cache?.lessonPlansWorkspace?.version)return;const remoteTime=Date.parse(db.lessonPlansWorkspace?.updatedAt||0)||0,localTime=Date.parse(cache.lessonPlansWorkspace?.updatedAt||0)||0;if(db.lessonPlansWorkspace?.version&&remoteTime&&localTime&&localTime<=remoteTime)return;const before=JSON.stringify(db.lessonPlansWorkspace||{});db.lessonPlansWorkspace={...(db.lessonPlansWorkspace||{}),...cache.lessonPlansWorkspace};if(JSON.stringify(db.lessonPlansWorkspace||{})!==before)Bootstrap.localLessonPlansCacheMerged=true}
 function mergeLocalTwrCache(db){const cache=readLocalCatalogCache();if(!cache?.twr?.version)return;const before=JSON.stringify(db.twr||{});db.twr={...(db.twr||{}),...cache.twr};if(JSON.stringify(db.twr||{})!==before)Bootstrap.localTwrCacheMerged=true}
-function mergeLocalCatalogCaches(db){mergeLocalStudentCache(db);mergeLocalTeacherCache(db);mergeLocalLessonPlansCache(db);mergeLocalTwrCache(db);return db}
+function normalizeLegacyClassLinks(db){
+  Object.entries(LEGACY_CLASS_LINKS).forEach(([legacyId,target])=>{
+    const targetClass=(db.classes||[]).find(item=>item.id===target.id||item.legacyId===target.id||item.supabaseId===target.id);
+    if(targetClass){
+      targetClass.name=target.name;
+      targetClass.schedule=targetClass.schedule||target.schedule;
+      targetClass.teacherId=targetClass.teacherId||target.teacherId;
+      targetClass.course=targetClass.course||target.course;
+      targetClass.level=targetClass.level||target.level;
+      targetClass.studentIds=[...new Set([...(targetClass.studentIds||[]),...(db.students||[]).filter(student=>student.classId===legacyId).map(student=>student.id)].filter(Boolean))];
+      targetClass.studentsCount=targetClass.studentIds.length||targetClass.studentsCount||0;
+    }
+    (db.students||[]).forEach(student=>{
+      if(student.classId!==legacyId)return;
+      student.classId=target.id;
+      student.teacherId=student.teacherId||target.teacherId;
+      student.className=target.name;
+      student.schedule=target.schedule;
+      student.bookId=student.bookId||target.bookId;
+      student.bookName=student.bookName||target.bookName;
+      student.bookTitle=student.bookTitle||target.bookName;
+      student.course=student.course||target.course;
+      student.level=student.level||target.level;
+    });
+  });
+  return db;
+}
+function mergeLocalCatalogCaches(db){mergeLocalStudentCache(db);mergeLocalTeacherCache(db);mergeLocalLessonPlansCache(db);mergeLocalTwrCache(db);normalizeLegacyClassLinks(db);return db}
 async function flushMergedLocalCachesToRemote({silent=false}={}){
   const merged=[];
   if(Bootstrap.localTeacherCacheMerged)merged.push('Professores');
