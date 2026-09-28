@@ -1359,6 +1359,25 @@
   function replanScheduleContent(schedule,meetingId,groups,startIndex){
     const meetings=scheduleMeetings(schedule),meetingIndex=meetings.findIndex(item=>item.id===meetingId);
     if(!schedule||meetingIndex<0||startIndex<0||!groups[startIndex])return false;
+    if(schedule.liveSplit){
+      const blocks=groups.slice(startIndex).flatMap(group=>group.blocks||[]);
+      if(!blocks.length)return false;
+      let nextEncounter=Math.max(0,...meetings.map(item=>Number(item.encounterOrder)||0))+1;
+      blocks.forEach((block,offset)=>{
+        let item=meetings[meetingIndex+offset];
+        if(!item){
+          item={id:uid('replanned-meeting'),encounterOrder:nextEncounter,date:schedule.projectedEndDate||'',time:schedule.time||'',blocks:[],blockIds:[],localChange:true,generatedByReplanFrom:meetingId};
+          nextEncounter+=1;
+          schedule.meetings.push(item);
+        }
+        const replanned=classReplanBlock(block,item);
+        item.blocks=[replanned];
+        item.blockIds=[replanned.id];
+        item.localChange=true;
+        item.changeReason=`Conteúdo reajustado a partir do encontro ${String(meetings[meetingIndex].encounterOrder).padStart(2,'0')}`;
+      });
+      return true;
+    }
     let nextEncounter=Math.max(0,...meetings.map(item=>Number(item.encounterOrder)||0))+1;
     for(let groupIndex=startIndex,offset=0;groupIndex<groups.length;groupIndex+=1,offset+=1){
       let item=meetings[meetingIndex+offset];
@@ -1381,7 +1400,7 @@
     if(!schedule||!meeting||!groups.length)return toast('Cronograma base não encontrado para ajustar conteúdo.');
     const currentFirst=(meeting.blocks||[])[0],currentOrder=Number(currentFirst?.encounterOrder)||Number(meeting.encounterOrder)||1;
     const options=groups.map((group,index)=>{const first=group.blocks[0]||{},label=`Encontro ${String(group.encounterOrder).padStart(2,'0')} · ${first.unit||'Unit'} · ${first.title||'Conteúdo'}`;return `<option value="${index}" ${Number(group.encounterOrder)===currentOrder?'selected':''}>${esc(label)}</option>`}).join('');
-    showModal(`<div class="modal-head"><div><span class="eyebrow">Ajustar planejamento</span><h3>Reorganizar conteúdo ou data</h3><p class="helper">Use conteúdo quando a turma atrasou/adiantou matéria. Use pular data ou escolher data quando o conteúdo está correto, mas a aula não vai acontecer neste dia.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="field"><label>Conteúdo para este encontro</label><select id="replanStartGroup">${options}</select><small>Altera a sequência pedagógica a partir deste encontro. Datas, chamadas e alunos são preservados.</small></div><div class="form-grid cols-2"><div class="field"><label>Dar este conteúdo em uma data específica</label><input id="replanManualDate" type="date" value="${esc(meeting.manualDate||meeting.date||today())}"/><small>Move este encontro para a data escolhida e recalcula os próximos.</small></div><div class="alert yellow"><div class="alert-icon">!</div><div><b>A aula não vai acontecer nesta data?</b><span>Pule para a próxima data válida ou escolha exatamente a data desejada.</span></div></div></div><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Cancelar</button><button class="btn soft" onclick="PurpleTurmas.skipMeetingDate('${esc(classId)}','${esc(meetingId)}')">Pular data e manter conteúdo</button><button class="btn soft" onclick="PurpleTurmas.setMeetingManualDate('${esc(classId)}','${esc(meetingId)}')">Mover para data escolhida</button><button class="btn primary" onclick="PurpleTurmas.saveReplanContent('${esc(classId)}','${esc(meetingId)}')">Aplicar sequência</button></div>`);
+    showModal(`<div class="modal-head"><div><span class="eyebrow">Ajustar planejamento</span><h3>Reorganizar conteúdo ou data</h3><p class="helper">Use conteúdo quando a turma atrasou/adiantou matéria. Use pular data ou escolher data quando o conteúdo está correto, mas a aula não vai acontecer neste dia.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="field"><label>Conteúdo para este encontro</label><select id="replanStartGroup">${options}</select><small>Altera a sequência pedagógica a partir deste encontro. Datas, chamadas e alunos são preservados.</small></div><div class="form-grid cols-2"><div class="field"><label>Dar este conteúdo em uma data específica</label><input id="replanManualDate" type="date" value="${esc(meeting.manualDate||meeting.date||today())}"/><small>Move este encontro para a data escolhida e recalcula os próximos.</small></div><div class="alert yellow"><div class="alert-icon">!</div><div><b>Conteúdo já foi dado antes?</b><span>Pule este conteúdo na sequência. O próximo conteúdo passa para esta data e os demais são puxados para frente.</span></div></div></div><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Cancelar</button><button class="btn soft" onclick="PurpleTurmas.skipMeetingDate('${esc(classId)}','${esc(meetingId)}')">Pular data e manter conteúdo</button><button class="btn soft" onclick="PurpleTurmas.setMeetingManualDate('${esc(classId)}','${esc(meetingId)}')">Mover para data escolhida</button><button class="btn soft" onclick="PurpleTurmas.skipReplanContent('${esc(classId)}','${esc(meetingId)}')">Pular conteúdo já dado</button><button class="btn primary" onclick="PurpleTurmas.saveReplanContent('${esc(classId)}','${esc(meetingId)}')">Aplicar sequência</button></div>`);
   }
   async function saveReplanContent(classId,meetingId){
     if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
@@ -1394,6 +1413,21 @@
     ensure().activeTab='schedule';
     ensure().activeMeetingId=meetingId;
     await persist('Conteúdo do cronograma reajustado.');
+    closeModal();
+    rerender();
+  }
+  async function skipReplanContent(classId,meetingId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
+    const schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId),template=scheduleTemplate(schedule?.templateId),groups=groupedTemplateBlocks(template);
+    if(!schedule||!meeting||!groups.length)return toast('Cronograma base não encontrado para ajustar conteúdo.');
+    const currentFirst=(meeting.blocks||[])[0],currentOrder=Number(currentFirst?.encounterOrder)||Number(meeting.encounterOrder)||1,currentIndex=Math.max(0,groups.findIndex(group=>Number(group.encounterOrder)===currentOrder)),nextIndex=currentIndex+1;
+    if(!groups[nextIndex])return toast('Não há próximo conteúdo para puxar.');
+    if(!replanScheduleContent(schedule,meetingId,groups,nextIndex))return toast('Não foi possível puxar o próximo conteúdo.');
+    recalcSchedule(classId);
+    ensure().activeClassId=classId;
+    ensure().activeTab='schedule';
+    ensure().activeMeetingId=meetingId;
+    await persist('Conteúdo já dado foi pulado e a sequência foi puxada para esta data.');
     closeModal();
     rerender();
   }
@@ -1853,5 +1887,5 @@
     ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender();
     setTimeout(()=>openGradeHomeworkPopup(classId,meetingId),80);
   }
-  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting,jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,verifyClass,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,setMeetingManualDate,cancelMeeting,deleteMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate,setMeetingManualDate,shouldShowGradeHomeworkAlert,gradeHomeworkStatus,blockUnitNumber}};
+  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting,jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,verifyClass,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,skipReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,setMeetingManualDate,cancelMeeting,deleteMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate,setMeetingManualDate,skipReplanContent,shouldShowGradeHomeworkAlert,gradeHomeworkStatus,blockUnitNumber}};
 })();
