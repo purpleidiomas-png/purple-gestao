@@ -5451,6 +5451,18 @@ body:has(.turma-workspace){
   font-weight:900!important;
   white-space:nowrap!important;
 }
+.turma-workspace .turma-schedule-premium .schedule-node-head .schedule-adjustment-badge{
+  margin-left:0!important;
+  max-width:220px!important;
+  padding:4px 7px!important;
+  background:#fff4e8!important;
+  border:1px solid rgba(255,122,24,.18)!important;
+  color:#9a4a0d!important;
+  font-size:.64rem!important;
+  line-height:1.15!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
 .turma-workspace .turma-schedule-premium .schedule-node p{
   margin:0!important;
   color:#6b5a75!important;
