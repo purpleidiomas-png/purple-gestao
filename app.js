@@ -4131,6 +4131,8 @@ window.App={
 };
 window.AppDiagnostics=showDiagnostics;
 window.App.saveStudentEnrollment=saveStudentEnrollmentReliable;
+window.App.saveDirectoryStudent=saveStudentRecord;
+window.App.saveDirectoryClass=saveClassRecord;
 
 (async function init(){
   try{

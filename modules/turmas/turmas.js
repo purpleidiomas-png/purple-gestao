@@ -1607,10 +1607,21 @@
     const c=(db().classes||[]).find(item=>item.id===classId),student=(db().students||[]).find(item=>item.id===studentId);
     if(!c||!student)return toast('Turma ou aluno não encontrado.');
     if(!confirm(`Remover ${student.name} da turma ${c.name}?`))return;
-    student.classId='';
+    const classNameTokens=[c.name,c.title,c.displayName].map(norm).filter(Boolean);
+    if(String(student.classId||'')===String(classId))student.classId='';
+    if(String(student.class_id||'')===String(classId))student.class_id='';
+    ['className','turma','group','groupName','class','courseClass'].forEach(field=>{
+      if(classNameTokens.includes(norm(student[field])))student[field]='';
+    });
     c.studentIds=(c.studentIds||[]).filter(id=>String(id)!==String(studentId));
+    c.students=(c.students||[]).filter(item=>String(typeof item==='string'?item:item?.id)!==String(studentId));
     student.updatedAt=new Date().toISOString();
+    c.updatedAt=new Date().toISOString();
     c.studentsCount=classStudents(classId).length;
+    await Promise.all([
+      window.App?.saveDirectoryStudent?.(student),
+      window.App?.saveDirectoryClass?.(c)
+    ]);
     await persist('Aluno removido da turma.');
     rerender();
   }
