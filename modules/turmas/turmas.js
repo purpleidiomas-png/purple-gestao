@@ -40,10 +40,7 @@
   function studentMatchesClass(student={},klass={}){
     if(String(student.classId||'')===String(klass.id||''))return true;
     const linkedIds=new Set([...(klass.studentIds||[]),...(klass.students||[]).map(item=>typeof item==='string'?item:item?.id)].filter(Boolean).map(String));
-    if(linkedIds.has(String(student.id)))return true;
-    const classNames=[klass.name,klass.title,klass.displayName].map(norm).filter(Boolean);
-    const studentClasses=[student.className,student.turma,student.group,student.groupName,student.class,student.courseClass].map(norm).filter(Boolean);
-    return classNames.length&&studentClasses.some(value=>classNames.includes(value));
+    return linkedIds.has(String(student.id));
   }
   function classStudents(classId){
     const klass=(db().classes||[]).find(c=>c.id===classId)||{};
@@ -1616,12 +1613,9 @@
     const c=(db().classes||[]).find(item=>item.id===classId),student=(db().students||[]).find(item=>item.id===studentId);
     if(!c||!student)return toast('Turma ou aluno não encontrado.');
     if(!confirm(`Remover ${student.name} da turma ${c.name}?`))return;
-    const classNameTokens=[c.name,c.title,c.displayName].map(norm).filter(Boolean);
     if(String(student.classId||'')===String(classId))student.classId='';
     if(String(student.class_id||'')===String(classId))student.class_id='';
-    ['className','turma','group','groupName','class','courseClass'].forEach(field=>{
-      if(classNameTokens.includes(norm(student[field])))student[field]='';
-    });
+    ['className','turma','group','groupName','class','courseClass'].forEach(field=>{student[field]=''});
     c.studentIds=(c.studentIds||[]).filter(id=>String(id)!==String(studentId));
     c.students=(c.students||[]).filter(item=>String(typeof item==='string'?item:item?.id)!==String(studentId));
     student.updatedAt=new Date().toISOString();
@@ -1631,6 +1625,7 @@
       window.App?.saveDirectoryStudent?.(student),
       window.App?.saveDirectoryClass?.(c)
     ]);
+    window.App?.writeLocalStudentCache?.();
     await persist('Aluno removido da turma.');
     rerender();
   }

@@ -1025,7 +1025,7 @@ function writeLocalStudentCache(deletedIds=[]){const current=readLocalCatalogCac
 function writeLocalLessonPlansCache(){writeLocalCatalogCache({lessonPlansWorkspace:State.db.lessonPlansWorkspace||null})}
 function writeLocalTwrCache(){writeLocalCatalogCache({twr:State.db.twr||null})}
 function mergeLocalTeacherCache(db){const cache=readLocalCatalogCache();if(cache?.teacherCleanupVersion!==TEACHERS_CLEAN_VERSION||!Array.isArray(cache.teachers))return;const before=JSON.stringify(db.teachers||[]),removed=new Set(cache.deletedTeacherIds||[]),remote=(db.teachers||[]).filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId));db.teachers=mergeRecords(remote,cache.teachers.filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId)));if(JSON.stringify(db.teachers||[])!==before)Bootstrap.localTeacherCacheMerged=true}
-function mergeLocalStudentCache(db){const cache=readLocalCatalogCache();if(!Array.isArray(cache?.students))return;const removed=new Set(cache.deletedStudentIds||[]),remote=(db.students||[]).filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId));db.students=mergeRecords(remote,cache.students.filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId)))}
+function mergeLocalStudentCache(db){const cache=readLocalCatalogCache();if(!Array.isArray(cache?.students))return;const removed=new Set(cache.deletedStudentIds||[]),remote=(db.students||[]).filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId)),local=cache.students.filter(item=>!removed.has(item.id)&&!removed.has(item.supabaseId));db.students=mergeRecords(local,remote)}
 function mergeLocalLessonPlansCache(db){const cache=readLocalCatalogCache();if(!cache?.lessonPlansWorkspace?.version)return;const remoteTime=Date.parse(db.lessonPlansWorkspace?.updatedAt||0)||0,localTime=Date.parse(cache.lessonPlansWorkspace?.updatedAt||0)||0;if(db.lessonPlansWorkspace?.version&&remoteTime&&localTime&&localTime<=remoteTime)return;const before=JSON.stringify(db.lessonPlansWorkspace||{});db.lessonPlansWorkspace={...(db.lessonPlansWorkspace||{}),...cache.lessonPlansWorkspace};if(JSON.stringify(db.lessonPlansWorkspace||{})!==before)Bootstrap.localLessonPlansCacheMerged=true}
 function mergeLocalTwrCache(db){const cache=readLocalCatalogCache();if(!cache?.twr?.version)return;const before=JSON.stringify(db.twr||{});db.twr={...(db.twr||{}),...cache.twr};if(JSON.stringify(db.twr||{})!==before)Bootstrap.localTwrCacheMerged=true}
 function normalizeLegacyClassLinks(db){
@@ -1037,8 +1037,8 @@ function normalizeLegacyClassLinks(db){
       targetClass.teacherId=targetClass.teacherId||target.teacherId;
       targetClass.course=targetClass.course||target.course;
       targetClass.level=targetClass.level||target.level;
-      targetClass.studentIds=[...new Set([...(targetClass.studentIds||[]),...(db.students||[]).filter(student=>student.classId===legacyId).map(student=>student.id)].filter(Boolean))];
-      targetClass.studentsCount=targetClass.studentIds.length||targetClass.studentsCount||0;
+      targetClass.studentIds=[...new Set((targetClass.studentIds||[]).filter(Boolean))];
+      targetClass.studentsCount=(db.students||[]).filter(student=>student.classId===target.id||targetClass.studentIds.includes(student.id)).length||targetClass.studentsCount||0;
     }
     (db.students||[]).forEach(student=>{
       if(student.classId!==legacyId)return;
@@ -4133,6 +4133,7 @@ window.AppDiagnostics=showDiagnostics;
 window.App.saveStudentEnrollment=saveStudentEnrollmentReliable;
 window.App.saveDirectoryStudent=saveStudentRecord;
 window.App.saveDirectoryClass=saveClassRecord;
+window.App.writeLocalStudentCache=()=>writeLocalStudentCache();
 
 (async function init(){
   try{
