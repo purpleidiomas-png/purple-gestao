@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.14.04-live-replan-pull-content',
-  serviceWorkerVersion:'purple-gestao-v330',
+  appVersion:'1.14.05-replan-modal-fit',
+  serviceWorkerVersion:'purple-gestao-v331',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',
