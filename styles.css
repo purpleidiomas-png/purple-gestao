@@ -1540,6 +1540,28 @@ th{font-size:9px}
 #modalRoot .classes-editor .class-time-custom{display:grid;grid-template-columns:minmax(84px,1fr) auto minmax(84px,1fr);gap:5px;align-items:center}
 #modalRoot .classes-editor .class-time-custom span{font-size:9px!important;font-weight:850!important;color:#7a7087!important;text-align:center!important;text-transform:uppercase!important}
 #modalRoot .classes-editor .class-time-custom input{padding-inline:5px!important}
+#modalRoot .modal:has(.classes-editor){width:min(1180px,calc(100vw - 32px))!important;padding:18px 20px 14px!important}
+#modalRoot .classes-editor{grid-template-columns:1fr!important;gap:12px!important}
+#modalRoot .classes-editor>.form-card{grid-column:1/-1!important;padding:14px!important;border-radius:16px!important}
+#modalRoot .classes-editor>.form-grid.cols-3{grid-template-columns:repeat(3,minmax(180px,1fr))!important;gap:10px 12px!important}
+#modalRoot .classes-editor>.form-grid.cols-2{grid-template-columns:repeat(2,minmax(220px,1fr))!important;gap:10px 12px!important}
+#modalRoot .classes-editor .form-card>.form-grid.cols-2{grid-template-columns:repeat(2,minmax(280px,1fr))!important;gap:12px!important}
+#modalRoot .classes-editor .mini-card{padding:12px!important;border-radius:14px!important;background:#fff!important;border:1px solid #eadff3!important}
+#modalRoot .classes-editor .mini-card-title{margin-bottom:10px!important}
+#modalRoot .classes-editor .mini-card>.form-grid.cols-3{grid-template-columns:minmax(150px,.85fr) minmax(260px,1.35fr) minmax(130px,.8fr)!important;gap:10px!important;align-items:end!important}
+#modalRoot .classes-editor .field label{font-size:10px!important;margin-bottom:5px!important}
+#modalRoot .classes-editor .field input,#modalRoot .classes-editor .field select{height:38px!important;min-height:38px!important;padding:8px 10px!important;font-size:12px!important;border-radius:11px!important}
+#modalRoot .classes-editor .muted{font-size:10px!important;line-height:1.35!important;margin-top:8px!important}
+#modalRoot .classes-editor .form-card h3{font-size:14px!important;margin:0 0 10px!important}
+#modalRoot .classes-editor .section-actions{padding-top:12px!important}
+
+@media(max-width:980px){
+  #modalRoot .modal:has(.classes-editor){width:calc(100vw - 16px)!important;padding:14px!important}
+  #modalRoot .classes-editor>.form-grid.cols-2,
+  #modalRoot .classes-editor>.form-grid.cols-3,
+  #modalRoot .classes-editor .form-card>.form-grid.cols-2,
+  #modalRoot .classes-editor .mini-card>.form-grid.cols-3{grid-template-columns:1fr!important}
+}
 
 @media(max-width:900px){
   .app-shell.sidebar-fixed,.app-shell.sidebar-intelligent{grid-template-columns:1fr!important}
