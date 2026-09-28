@@ -777,6 +777,10 @@
     }
     return null;
   }
+  function advanceLiveCandidatesAfter(candidates,date){
+    const limit=dateFromISO(date);
+    candidates.forEach(slot=>{while(slot.nextDate<=limit)slot.nextDate=addDays(slot.nextDate,7)});
+  }
   function holidayList(){return [...(db().settings?.classHolidays||[]),...(db().classHolidays||[])].filter((item,index,arr)=>item?.date&&arr.findIndex(other=>other.date===item.date)===index)}
   function syncHolidayList(list){
     const normalized=(list||[]).filter(item=>item?.date).map(item=>({id:item.id||uid('hol'),date:item.date,name:norm(item.name||'FERIADO'),scope:norm(item.scope||'NACIONAL')}));
@@ -878,6 +882,12 @@
     if(schedule.liveSplit&&liveBlocks.length>1){
       const candidates=liveDateCandidates(liveBlocks,schedule.startDate||c.startDate||today()),ignored=[],guardState={count:0};
       scheduleMeetings(schedule).forEach((meeting,index)=>{
+        if(meeting.manualDate){
+          const slot=liveBlocks.find(block=>block.weekday===dateFromISO(meeting.manualDate).getDay())||liveBlocks[Number(meeting.scheduleBlockIndex)||0]||liveBlocks[index%liveBlocks.length];
+          meeting.date=meeting.manualDate;meeting.time=slot.time||meeting.time;meeting.room=slot.room||c.room||'';meeting.scheduleBlockIndex=slot.slotIndex??liveBlocks.indexOf(slot);
+          advanceLiveCandidatesAfter(candidates,meeting.manualDate);
+          return;
+        }
         const next=nextLiveSlot(c,candidates,ignored,guardState,schedule),slot=next?.slot||liveBlocks[index%liveBlocks.length],cursor=next?.date||firstRecurringDate(schedule.startDate||c.startDate||today(),slot.weekday);
         meeting.date=iso(cursor);meeting.time=slot.time;meeting.room=slot.room||c.room||'';meeting.scheduleBlockIndex=slot.slotIndex??index%liveBlocks.length;
       });
@@ -886,6 +896,11 @@
     const weekday=classWeekday(c),ignored=[],time=classBlocks(c)[0]?.time||schedule.time||'';
     let cursor=firstRecurringDate(schedule.startDate||c.startDate||today(),weekday),guard=0;
     for(const meeting of scheduleMeetings(schedule)){
+      if(meeting.manualDate){
+        meeting.date=meeting.manualDate;meeting.time=time;
+        cursor=addDays(dateFromISO(meeting.manualDate),7);
+        continue;
+      }
       let reason=scheduleBlockedReason(iso(cursor),c,schedule);
       while(reason&&guard<520){ignored.push({date:iso(cursor),reason});cursor=addDays(cursor,7);guard+=1;reason=scheduleBlockedReason(iso(cursor),c,schedule)}
       meeting.date=iso(cursor);meeting.time=time;cursor=addDays(cursor,7);
@@ -1359,7 +1374,7 @@
     if(!schedule||!meeting||!groups.length)return toast('Cronograma base não encontrado para ajustar conteúdo.');
     const currentFirst=(meeting.blocks||[])[0],currentOrder=Number(currentFirst?.encounterOrder)||Number(meeting.encounterOrder)||1;
     const options=groups.map((group,index)=>{const first=group.blocks[0]||{},label=`Encontro ${String(group.encounterOrder).padStart(2,'0')} · ${first.unit||'Unit'} · ${first.title||'Conteúdo'}`;return `<option value="${index}" ${Number(group.encounterOrder)===currentOrder?'selected':''}>${esc(label)}</option>`}).join('');
-    showModal(`<div class="modal-head"><div><span class="eyebrow">Ajustar planejamento</span><h3>Reorganizar conteúdo ou data</h3><p class="helper">Use conteúdo quando a turma atrasou/adiantou matéria. Use pular data quando o conteúdo está correto, mas a aula não vai acontecer neste dia.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="field"><label>Conteúdo para este encontro</label><select id="replanStartGroup">${options}</select><small>Altera a sequência pedagógica a partir deste encontro. Datas, chamadas e alunos são preservados.</small></div><div class="alert yellow"><div class="alert-icon">!</div><div><b>A aula não vai acontecer nesta data?</b><span>Pule somente esta data. O mesmo encontro será movido para a próxima data válida, respeitando feriados e recessos, e o término da turma será recalculado.</span></div></div><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Cancelar</button><button class="btn soft" onclick="PurpleTurmas.skipMeetingDate('${esc(classId)}','${esc(meetingId)}')">Pular data e manter conteúdo</button><button class="btn primary" onclick="PurpleTurmas.saveReplanContent('${esc(classId)}','${esc(meetingId)}')">Aplicar sequência</button></div>`);
+    showModal(`<div class="modal-head"><div><span class="eyebrow">Ajustar planejamento</span><h3>Reorganizar conteúdo ou data</h3><p class="helper">Use conteúdo quando a turma atrasou/adiantou matéria. Use pular data ou escolher data quando o conteúdo está correto, mas a aula não vai acontecer neste dia.</p></div><button class="modal-close" onclick="App.closeModal()">×</button></div><div class="field"><label>Conteúdo para este encontro</label><select id="replanStartGroup">${options}</select><small>Altera a sequência pedagógica a partir deste encontro. Datas, chamadas e alunos são preservados.</small></div><div class="form-grid cols-2"><div class="field"><label>Dar este conteúdo em uma data específica</label><input id="replanManualDate" type="date" value="${esc(meeting.manualDate||meeting.date||today())}"/><small>Move este encontro para a data escolhida e recalcula os próximos.</small></div><div class="alert yellow"><div class="alert-icon">!</div><div><b>A aula não vai acontecer nesta data?</b><span>Pule para a próxima data válida ou escolha exatamente a data desejada.</span></div></div></div><div class="section-actions"><button class="btn ghost" onclick="App.closeModal()">Cancelar</button><button class="btn soft" onclick="PurpleTurmas.skipMeetingDate('${esc(classId)}','${esc(meetingId)}')">Pular data e manter conteúdo</button><button class="btn soft" onclick="PurpleTurmas.setMeetingManualDate('${esc(classId)}','${esc(meetingId)}')">Mover para data escolhida</button><button class="btn primary" onclick="PurpleTurmas.saveReplanContent('${esc(classId)}','${esc(meetingId)}')">Aplicar sequência</button></div>`);
   }
   async function saveReplanContent(classId,meetingId){
     if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
@@ -1418,6 +1433,32 @@
   }
   async function skipMeetingDate(classId,meetingId){
     return moveMeetingDate(classId,meetingId,{confirmFirst:false,message:'Data pulada. Conteúdo mantido e cronograma recalculado.'});
+  }
+  async function setMeetingManualDate(classId,meetingId){
+    if(!canManageSchedule())return toast('Somente coordenação e direção podem ajustar cronogramas.');
+    const c=(db().classes||[]).find(item=>item.id===classId),schedule=classGeneratedSchedule(classId),meeting=schedule?.meetings.find(item=>item.id===meetingId),date=$('#replanManualDate')?.value||'';
+    if(!c||!schedule||!meeting)return toast('Selecione um encontro do cronograma.');
+    if(!date)return toast('Escolha a data em que este conteúdo será dado.');
+    const reason=blockedReason(date,c);
+    if(reason)return toast(`Esta data está bloqueada: ${reason}`);
+    const skipped=Array.isArray(schedule.skippedDates)?schedule.skippedDates:[...(schedule.postponedDates||[])];
+    if(meeting.date&&meeting.date!==date&&!skipped.some(item=>(typeof item==='string'?item:item?.date)===meeting.date)){
+      skipped.push({id:uid('skip'),date:meeting.date,meetingId:meeting.id,reason:`Encontro ${String(meeting.encounterOrder).padStart(2,'0')} movido para ${fmtDate(date)}`,createdAt:new Date().toISOString()});
+    }
+    schedule.skippedDates=skipped;
+    delete schedule.postponedDates;
+    meeting.manualDate=date;
+    meeting.status='planned';
+    meeting.localChange=true;
+    meeting.postponedFromDate=meeting.postponedFromDate||meeting.date;
+    meeting.changeReason=`Aula movida manualmente para ${fmtDate(date)}`;
+    recalcSchedule(classId);
+    ensure().activeClassId=classId;
+    ensure().activeTab='schedule';
+    ensure().activeMeetingId=meetingId;
+    await persist('Encontro movido para a data escolhida e cronograma recalculado.');
+    closeModal();
+    rerender();
   }
   async function cancelMeeting(classId,meetingId){
     return postponeMeeting(classId,meetingId);
@@ -1805,5 +1846,5 @@
     ensure().activeClassId=classId;ensure().activeTab='schedule';ensure().activeMeetingId=meetingId;rerender();
     setTimeout(()=>openGradeHomeworkPopup(classId,meetingId),80);
   }
-  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting,jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,verifyClass,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,cancelMeeting,deleteMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate,shouldShowGradeHomeworkAlert,gradeHomeworkStatus,blockUnitNumber}};
+  window.PurpleTurmas={render:renderModule,showClasses:()=>{ensure().view='list';ensure().activeClassId='';rerender()},setClassFilter:filter=>{ensure().classFilter=filter;rerender()},showTemplates:()=>{ensure().view='templates';ensure().activeClassId='';if(window.App?.go)window.App.go('schedules');else rerender()},showCalendar:()=>{ensure().view='calendar';ensure().activeClassId='';rerender()},open:id=>{ensure().activeClassId=id;ensure().activeTab='schedule';rerender()},openMeeting,jumpMeeting,back:()=>{ensure().activeClassId='';rerender()},tab:id=>{ensure().activeTab=id==='today'?'schedule':id;rerender()},setAttendance,allPresent,verifyClass,completeClass,finishClassOnly,createNextClassFromCompleted,archiveClass,deleteClass,setBlockStatus,completePlanned,quickStudent,signal,saveSignal,openInbox,updateSignal,openLesson,openBook,noteClass,saveMeetingNote,registerDivergence,saveDivergence,openHoliday,saveHoliday,deleteHoliday,openRecess,saveRecess,deleteRecess,openAddStudent,filterAddStudent,linkStudent,unlinkStudent,openClassGrade,openHomeworkGrades,saveClassGrade,deleteClassGrade,openTemplates,openTemplate,editTemplateInfo,saveTemplateInfo,chooseClassForTemplate,newTemplate,saveTemplate,addTemplateBlock:templateId=>templateBlockModal(templateId),editTemplateBlock:templateBlockModal,saveTemplateBlock,moveTemplateBlock,removeTemplateBlock,publishTemplateVersion,previewSchedule,showSchedulePreview,publishSchedule,insertLesson,saveInsertedLesson,replanContent,saveReplanContent,repeatMeeting,postponeMeeting,skipMeetingDate,setMeetingManualDate,cancelMeeting,deleteMeeting,_test:{ensure,scheduleTemplates,scheduleTemplate,groupedTemplateBlocks,generateSchedulePreview,progressFor,attendancePercent,attendanceStats,recalcSchedule,meetingAttendanceKey,attendanceRows,scheduleMeetings,normalizeScheduleOrder,scheduleBlockedReason,replanScheduleContent,holidayList,recessList,studentSearchRows,classGradeRows,classStudents,gradeTypes,normalizeGradeScore,studentClassGradeSummary,nextModuleSuggestion,jumpMeeting,postponeMeeting,skipMeetingDate,setMeetingManualDate,shouldShowGradeHomeworkAlert,gradeHomeworkStatus,blockUnitNumber}};
 })();
