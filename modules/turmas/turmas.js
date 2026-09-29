@@ -955,7 +955,7 @@
     if(query)all=all.filter(c=>norm([c.name,c.course,c.level,c.status,teacherLabel(c.teacherId),bookLabel(c.bookId,c),c.room,c.schedule,...classBlocks(c).flatMap(block=>[block.day,block.time,block.room])].join(' ')).includes(query));
     if(user().role!=='teacher')return sortClassesBySchedule(all);
     const teacherId=window.App?.resolveTeacherIdForUser?.(user())||'';
-    return teacherId?sortClassesBySchedule(all.filter(c=>c.teacherId===teacherId)):[];
+    return teacherId?sortClassesBySchedule(all.filter(c=>window.App?.classTeacherMatches?.(c,teacherId)||c.teacherId===teacherId)):[];
   }
 
   function nextSession(c){
