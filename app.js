@@ -2,7 +2,7 @@
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const AUTH_CONFIG=window.PurpleAuthConfig||{};
 const APP_VERSION=AUTH_CONFIG.appVersion||'1.13.55-grade-flow';
-const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v278';
+const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v345';
 const MANIFEST_VERSION=AUTH_CONFIG.manifestVersion||document.querySelector('link[rel="manifest"]')?.getAttribute('href')||'manifest.webmanifest';
 const SUPABASE_URL=AUTH_CONFIG.supabaseUrl||'https://qqlymzyvvgmbyuhswipp.supabase.co';
 const SUPABASE_KEY=AUTH_CONFIG.supabaseKey||'sb_publishable_3E5BMGRcfKRt0MBFXPTfwg_lexboTMm';
