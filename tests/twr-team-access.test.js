@@ -97,5 +97,7 @@ const teacherHtml=getElement('pageContainer').innerHTML;
 
 assert(!teacherHtml.includes('Todos os teachers'),'Professor comum não deve ver a visão de equipe.');
 assert(teacherHtml.includes('Meu TWR'),'Professor comum deve continuar na visão individual.');
+assert(teacherHtml.includes('twr-teacher-board'),'Professor comum deve usar o mesmo modelo visual do board da Direção.');
+assert(!teacherHtml.includes("App.setTwrView('team')"),'Professor comum não deve receber aba Direção/equipe.');
 
 console.log('twr team access test ok');
