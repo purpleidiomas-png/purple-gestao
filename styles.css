@@ -6401,6 +6401,171 @@ body:has(.turma-workspace){
   }
 }
 
+/* Responsividade sistêmica premium — TWR e telas densas */
+html,body,#appShell,.main-area,#pageContainer{max-width:100%;overflow-x:hidden}
+.page{box-sizing:border-box}
+.twr-reference-page,
+.twr-reference-page *,
+.teacher-home,
+.teacher-home *{box-sizing:border-box}
+.page.twr-reference-page{
+  background:
+    radial-gradient(circle at 4% 0%,rgba(139,55,232,.12),transparent 28%),
+    radial-gradient(circle at 100% 10%,rgba(255,122,24,.12),transparent 30%);
+  border-radius:28px;
+}
+.page.twr-reference-page>.twr-reference-header,
+.teacher-home .teacher-home-hero{
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.94),rgba(255,255,255,.76)),
+    radial-gradient(circle at 88% 8%,rgba(255,122,24,.22),transparent 32%),
+    radial-gradient(circle at 8% 0%,rgba(142,55,232,.2),transparent 35%)!important;
+  border:1px solid rgba(123,45,226,.1)!important;
+  border-radius:26px!important;
+  padding:22px 24px!important;
+  box-shadow:0 22px 60px rgba(54,28,91,.08)!important;
+}
+.twr-reference-controls.twr-control-bar{
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.twr-control-group,
+.twr-reference-controls .field,
+.twr-period-group,
+.twr-mode-group,
+.twr-filter-group{min-width:0!important}
+.twr-reference-controls select,
+.twr-reference-controls input,
+.twr-reference-controls strong,
+.twr-reference-controls button{max-width:100%!important}
+.twr-reference-page .twr-planner-layout,
+.twr-reference-page.teacher .twr-planner-layout{
+  max-width:100%!important;
+  overflow:visible!important;
+}
+.twr-reference-page .twr-week-columns{
+  max-width:100%!important;
+  min-width:0!important;
+}
+.twr-summary-rail{
+  max-width:100%!important;
+  min-width:0!important;
+}
+.twr-day-board,
+.twr-summary-rail section,
+.twr-director-board,
+.twr-director-day-board{
+  background:
+    linear-gradient(180deg,#fff 0%,#fffafd 100%)!important;
+  border-color:rgba(120,55,224,.12)!important;
+}
+.twr-activity-card,
+.twr-event-row,
+.twr-director-shift,
+.twr-director-mini{
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.twr-activity-card.class,
+.twr-event-row.class,
+.twr-director-shift.class,
+.twr-director-mini.class{
+  background:linear-gradient(135deg,#f3e8ff 0%,#e7d6ff 48%,#fff0e5 100%)!important;
+  border-left-color:#7d2df2!important;
+}
+
+@media(max-width:1366px){
+  .page{padding-left:18px!important;padding-right:18px!important}
+  .twr-reference-controls.twr-control-bar{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  }
+  .twr-reference-page .twr-week-columns,
+  .twr-director-board-by-day{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .twr-planner-layout,
+  .twr-reference-page.teacher .twr-planner-layout{
+    grid-template-columns:1fr!important;
+  }
+  .twr-summary-rail{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  .twr-day-board{min-height:0!important}
+}
+@media(max-width:1024px){
+  .topbar{height:auto!important;min-height:68px!important}
+  .topbar-actions{min-width:0!important}
+  .page.twr-reference-page>.twr-reference-header{
+    grid-template-columns:1fr!important;
+  }
+  .twr-header-actions{
+    justify-content:flex-start!important;
+  }
+  .twr-reference-controls.twr-control-bar{
+    grid-template-columns:1fr!important;
+    overflow:visible!important;
+  }
+  .twr-period-group{
+    grid-template-columns:42px minmax(0,1fr) 42px 76px!important;
+  }
+  .twr-reference-page .twr-week-columns,
+  .twr-director-board-by-day,
+  .twr-summary-rail{
+    grid-template-columns:1fr!important;
+  }
+  .twr-director-board,
+  .twr-director-layout>div{overflow:visible!important}
+}
+@media(max-width:720px){
+  .app-shell{display:block!important}
+  .page{padding-left:12px!important;padding-right:12px!important}
+  .page.twr-reference-page>.twr-reference-header,
+  .teacher-home .teacher-home-hero{
+    padding:18px!important;
+    border-radius:22px!important;
+  }
+  .twr-reference-header h2,
+  .teacher-home .teacher-home-hero h1{
+    font-size:clamp(1.7rem,9vw,2.2rem)!important;
+    line-height:1.02!important;
+  }
+  .twr-header-actions,
+  .section-actions{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    width:100%!important;
+  }
+  .twr-header-actions .btn,
+  .section-actions .btn{
+    width:100%!important;
+  }
+  .twr-period-group,
+  .twr-filter-group{
+    grid-template-columns:1fr!important;
+  }
+  .twr-mode-group nav{
+    width:100%!important;
+    overflow-x:auto!important;
+  }
+  .twr-mode-group nav button{
+    min-height:34px!important;
+  }
+  .twr-admin-metrics{
+    grid-template-columns:1fr!important;
+  }
+  .twr-day-board{
+    padding:12px!important;
+    border-radius:18px!important;
+  }
+  .twr-time-card,
+  .form-grid.cols-4,
+  .form-grid.cols-3,
+  .form-grid.cols-2{
+    grid-template-columns:1fr!important;
+  }
+}
+
 /* Painel do professor - Purple Idiomas premium */
 .teacher-home{
   max-width:1560px!important;
