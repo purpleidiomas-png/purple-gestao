@@ -6400,3 +6400,165 @@ body:has(.turma-workspace){
     padding:12px 14px 14px!important;
   }
 }
+
+/* Painel do professor - Purple Idiomas premium */
+.teacher-home{
+  max-width:1560px!important;
+  position:relative!important;
+}
+.teacher-home:before{
+  content:""!important;
+  position:absolute!important;
+  inset:0 0 auto 0!important;
+  height:250px!important;
+  z-index:-1!important;
+  border-radius:0 0 34px 34px!important;
+  background:
+    radial-gradient(circle at 85% 15%,rgba(255,122,24,.2),transparent 30%),
+    radial-gradient(circle at 18% 0%,rgba(183,72,255,.18),transparent 34%),
+    linear-gradient(135deg,#fff7fb 0%,#f5efff 46%,#fff6ed 100%)!important;
+}
+.teacher-home .teacher-home-hero{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:end!important;
+  gap:18px!important;
+  margin-bottom:16px!important;
+  padding:28px 30px!important;
+  border:1px solid rgba(120,55,224,.14)!important;
+  border-radius:28px!important;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.92),rgba(255,255,255,.72)),
+    radial-gradient(circle at 92% 8%,rgba(255,122,24,.22),transparent 34%),
+    radial-gradient(circle at 10% 15%,rgba(127,47,232,.18),transparent 38%)!important;
+  box-shadow:0 26px 70px rgba(48,31,87,.1)!important;
+  overflow:hidden!important;
+}
+.teacher-home .teacher-home-hero .eyebrow{
+  color:#7a2de2!important;
+}
+.teacher-home .teacher-home-hero h1{
+  margin:7px 0 6px!important;
+  color:#180f3f!important;
+  font-size:clamp(2rem,3.4vw,3.35rem)!important;
+  line-height:.98!important;
+  font-weight:820!important;
+  letter-spacing:0!important;
+}
+.teacher-home .teacher-home-hero p{
+  color:#6f6981!important;
+  font-size:.98rem!important;
+}
+.teacher-home .teacher-home-hero .btn,
+.teacher-home .teacher-next .btn{
+  min-height:42px!important;
+  border-radius:14px!important;
+  background:linear-gradient(135deg,#7d2df2 0%,#5521bf 52%,#ff7a18 145%)!important;
+  color:#fff!important;
+  box-shadow:0 16px 32px rgba(93,45,191,.24)!important;
+}
+.teacher-home .teacher-next{
+  position:relative!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  padding:20px 22px!important;
+  border:1px solid rgba(255,255,255,.24)!important;
+  border-radius:26px!important;
+  background:
+    radial-gradient(circle at 86% -20%,rgba(255,122,24,.5),transparent 34%),
+    linear-gradient(125deg,#211057 0%,#5b22c9 52%,#982fe8 100%)!important;
+  box-shadow:0 28px 68px rgba(63,32,146,.24)!important;
+}
+.teacher-home .teacher-next .assist-mark{
+  width:68px!important;
+  height:68px!important;
+  border-radius:20px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.2),rgba(255,255,255,.08))!important;
+  color:#fff!important;
+  font-size:1.28rem!important;
+  line-height:1!important;
+}
+.teacher-home .teacher-next span{
+  color:#ffcfaa!important;
+}
+.teacher-home .teacher-next h2{
+  font-size:clamp(1.45rem,2.4vw,2.2rem)!important;
+  letter-spacing:0!important;
+}
+.teacher-home .home-columns{
+  grid-template-columns:minmax(0,1.15fr) minmax(360px,.85fr)!important;
+  gap:16px!important;
+}
+.teacher-home .home-section{
+  border:1px solid rgba(113,80,178,.12)!important;
+  border-radius:24px!important;
+  background:linear-gradient(180deg,#fff 0%,#fffaff 100%)!important;
+  box-shadow:0 18px 48px rgba(43,33,80,.07)!important;
+}
+.teacher-home .home-section-head{
+  align-items:center!important;
+}
+.teacher-home .home-section-head .eyebrow{
+  color:#8330e8!important;
+}
+.teacher-home .home-section-head h3{
+  color:#191344!important;
+  font-weight:760!important;
+  letter-spacing:0!important;
+}
+.teacher-home .priority-list{
+  gap:10px!important;
+}
+.teacher-home .priority-item{
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  min-height:58px!important;
+  padding:12px 13px!important;
+  border-color:rgba(113,80,178,.12)!important;
+  border-radius:16px!important;
+  background:linear-gradient(135deg,#fff 0%,#fbf7ff 68%,#fff8f1 100%)!important;
+}
+.teacher-home .priority-item b{
+  color:#211747!important;
+  font-size:.86rem!important;
+  font-weight:720!important;
+  letter-spacing:0!important;
+}
+.teacher-home .priority-item span{
+  color:#777087!important;
+  font-size:.73rem!important;
+  line-height:1.35!important;
+}
+.teacher-home .priority-dot{
+  width:11px!important;
+  height:11px!important;
+  background:linear-gradient(135deg,#7d2df2,#ff7a18)!important;
+  box-shadow:0 0 0 5px rgba(125,45,242,.09)!important;
+}
+.teacher-home .priority-dot.high,
+.teacher-home .priority-dot.alta{
+  background:linear-gradient(135deg,#ff7a18,#ff3d77)!important;
+}
+.teacher-home .priority-dot.medium,
+.teacher-home .priority-dot.media{
+  background:linear-gradient(135deg,#7d2df2,#b548ff)!important;
+}
+.teacher-home .priority-dot.low,
+.teacher-home .priority-dot.baixa{
+  background:linear-gradient(135deg,#1fbf75,#80e8ae)!important;
+}
+.teacher-home .btn.ghost.small{
+  border-color:rgba(119,68,205,.18)!important;
+  color:#5521bf!important;
+  background:#fff!important;
+}
+
+@media(max-width:980px){
+  .teacher-home .teacher-home-hero,
+  .teacher-home .teacher-next,
+  .teacher-home .home-columns{
+    grid-template-columns:1fr!important;
+  }
+  .teacher-home .teacher-home-hero{
+    padding:22px!important;
+  }
+}

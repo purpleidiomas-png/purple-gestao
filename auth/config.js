@@ -1,6 +1,6 @@
 window.PurpleAuthConfig=Object.freeze({
-  appVersion:'1.14.10-teacher-class-links',
-  serviceWorkerVersion:'purple-gestao-v336',
+  appVersion:'1.14.11-teacher-premium-links',
+  serviceWorkerVersion:'purple-gestao-v337',
   lessonPlansStorageBucket:'lesson-plan-assets',
   manifestVersion:'manifest.webmanifest',
   supabaseUrl:'https://qqlymzyvvgmbyuhswipp.supabase.co',
