@@ -787,7 +787,7 @@ function sanitizeTeacherDb(db,user){
   const links=safe.settings?.userTeacherLinks||{};
   const explicit=user?.teacherId||user?.teacher_id||links[user?.id]||'';
   const teachers=safe.teachers||[];
-  const linkedTeacher=teachers.find(t=>[t.id,t.supabaseId,t.legacyId].some(value=>catalogMatchToken(value)===catalogMatchToken(explicit)))||teachers.find(t=>String(t.email||'').toLowerCase()===String(user?.email||'').toLowerCase())||teachers.find(t=>personNamesMatch(user?.name,t.name||t.fullName||t.displayName));
+  const linkedTeacher=teachers.find(t=>[t.id,t.supabaseId,t.legacyId].some(value=>catalogMatchToken(value)===catalogMatchToken(explicit)))||teachers.find(t=>[t.userId,t.user_id,t.profileId,t.profile_id].some(value=>catalogMatchToken(value)===catalogMatchToken(user?.id)))||teachers.find(t=>String(t.email||'').toLowerCase()===String(user?.email||'').toLowerCase())||teachers.find(t=>personNamesMatch(user?.name,t.name||t.fullName||t.displayName));
   const teacherIds=[explicit,linkedTeacher?.id,linkedTeacher?.supabaseId,linkedTeacher?.legacyId].filter(Boolean).map(catalogMatchToken);
   const teacherNames=[linkedTeacher?.name,linkedTeacher?.fullName,linkedTeacher?.displayName,user?.name].filter(Boolean);
   const teacherOwnsClass=item=>{
@@ -3510,6 +3510,8 @@ function resolveTeacherIdForUser(user=State.user){
   const explicit=user?.teacherId||user?.teacher_id||userTeacherLinks()[user?.id];
   const teachers=twrActiveTeachers();
   if(explicit&&teachers.some(t=>t.id===explicit||t.supabaseId===explicit))return teachers.find(t=>t.id===explicit||t.supabaseId===explicit).id;
+  const byLinkedUser=teachers.find(t=>[t.userId,t.user_id,t.profileId,t.profile_id].some(value=>catalogMatchToken(value)===catalogMatchToken(user?.id)));
+  if(byLinkedUser)return byLinkedUser.id;
   const email=String(user?.email||'').toLowerCase();
   const byEmail=teachers.find(t=>String(t.email||'').toLowerCase()===email);
   if(byEmail)return byEmail.id;
