@@ -784,8 +784,24 @@ function cloneValue(value){return JSON.parse(JSON.stringify(value))}
 function teacherAllowedPages(){return new Set(TEACHER_MENU_ACCESS.map(item=>item.page))}
 function sanitizeTeacherDb(db,user){
   const safe=cloneValue(db||defaultDB());
-  safe.users=(safe.users||[]).filter(item=>item.role==='teacher'||(item.sector==='pedagogico'&&item.role==='leader')||item.id===user?.id).map(item=>({id:item.id,name:item.name,email:item.id===user?.id?item.email:'',role:item.role,sector:item.sector,active:item.active}));
-  safe.reports=[];safe.actions=[];safe.cases=[];safe.meetings=[];safe.audit=[];safe.students=[];safe.classes=[];safe.financialEntries=[];
+  const links=safe.settings?.userTeacherLinks||{};
+  const explicit=user?.teacherId||user?.teacher_id||links[user?.id]||'';
+  const teachers=safe.teachers||[];
+  const linkedTeacher=teachers.find(t=>[t.id,t.supabaseId,t.legacyId].some(value=>catalogMatchToken(value)===catalogMatchToken(explicit)))||teachers.find(t=>String(t.email||'').toLowerCase()===String(user?.email||'').toLowerCase())||teachers.find(t=>personNamesMatch(user?.name,t.name||t.fullName||t.displayName));
+  const teacherIds=[explicit,linkedTeacher?.id,linkedTeacher?.supabaseId,linkedTeacher?.legacyId].filter(Boolean).map(catalogMatchToken);
+  const teacherNames=[linkedTeacher?.name,linkedTeacher?.fullName,linkedTeacher?.displayName,user?.name].filter(Boolean);
+  const teacherOwnsClass=item=>{
+    const classIds=[item.teacherId,item.teacher_id,item.teacherSupabaseId,item.teacherLegacyId,item.data?.teacherId,item.data?.teacher_id].filter(Boolean).map(catalogMatchToken);
+    if(teacherIds.length&&classIds.some(id=>teacherIds.includes(id)))return true;
+    const classNames=[item.teacherName,item.teacher,item.professor,item.teacher_label,item.data?.teacherName,item.data?.teacher].filter(Boolean);
+    return teacherNames.some(name=>classNames.some(className=>personNamesMatch(name,className)));
+  };
+  safe.users=(safe.users||[]).filter(item=>item.role==='teacher'||(item.sector==='pedagogico'&&item.role==='leader')||item.id===user?.id).map(item=>({id:item.id,name:item.name,email:item.id===user?.id?item.email:'',role:item.role,sector:item.sector,active:item.active,teacherId:item.teacherId||item.teacher_id||links[item.id]||''}));
+  safe.classes=(safe.classes||[]).filter(teacherOwnsClass);
+  const classIds=new Set(safe.classes.flatMap(item=>[item.id,item.supabaseId,item.legacyId]).filter(Boolean));
+  safe.students=(safe.students||[]).filter(student=>classIds.has(student.classId)||classIds.has(student.class_id)||(Array.isArray(student.classIds)&&student.classIds.some(id=>classIds.has(id))));
+  safe.settings={...(safe.settings||{}),userTeacherLinks:{...(safe.settings?.userTeacherLinks||{}),...(linkedTeacher?.id&&user?.id?{[user.id]:linkedTeacher.id}:{})}};
+  safe.reports=[];safe.actions=[];safe.cases=[];safe.meetings=[];safe.audit=[];safe.financialEntries=[];
   safe.inventoryItems=[];safe.inventoryMovements=[];safe.inventoryAvailable=false;safe.assets=[];safe.assetMovements=[];safe.assetsAvailable=false;
   safe.operationalDiaries=[];safe.operationalDiaryAvailable=false;safe.intelligenceSnapshots=[];safe.tasks=[];safe.pulse=[];safe.achievements=[];safe.announcements=[];safe.readNotifications=[];
   return safe;
