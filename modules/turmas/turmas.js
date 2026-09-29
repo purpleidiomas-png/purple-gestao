@@ -951,11 +951,27 @@
 
   function visibleClasses(){
     const t=ensure(),query=norm(state().catalogSearch?.classes||''),filter=t.classFilter||'active';
-    let all=(db().classes||[]).filter(c=>filter==='archived'?isArchivedClass(c):filter==='all'?true:isActiveClass(c));
+    const source=db().classes||[];
+    let all=source.filter(c=>filter==='archived'?isArchivedClass(c):filter==='all'?true:isActiveClass(c));
     if(query)all=all.filter(c=>norm([c.name,c.course,c.level,c.status,teacherLabel(c.teacherId),bookLabel(c.bookId,c),c.room,c.schedule,...classBlocks(c).flatMap(block=>[block.day,block.time,block.room])].join(' ')).includes(query));
     if(user().role!=='teacher')return sortClassesBySchedule(all);
-    const teacherId=window.App?.resolveTeacherIdForUser?.(user())||'';
-    return teacherId?sortClassesBySchedule(all.filter(c=>window.App?.classTeacherMatches?.(c,teacherId)||c.teacherId===teacherId)):[];
+    const links=db().settings?.userTeacherLinks||{},teacherId=window.App?.resolveTeacherIdForUser?.(user())||user().teacherId||user().teacher_id||links[user().id]||'';
+    const teacherRecords=(db().teachers||[]).filter(teacher=>{
+      if(teacherId&&[teacher.id,teacher.supabaseId,teacher.legacyId].some(value=>norm(value)===norm(teacherId)))return true;
+      if([teacher.userId,teacher.user_id,teacher.profileId,teacher.profile_id].some(value=>norm(value)===norm(user().id)))return true;
+      if(String(teacher.email||'').toLowerCase()&&String(teacher.email||'').toLowerCase()===String(user().email||'').toLowerCase())return true;
+      return norm(user().name).split(' ').filter(Boolean).some(part=>norm(teacher.name||teacher.fullName||teacher.displayName).includes(part));
+    });
+    const teacherIds=new Set([teacherId,...teacherRecords.flatMap(teacher=>[teacher.id,teacher.supabaseId,teacher.legacyId])].filter(Boolean).map(norm));
+    const teacherNames=teacherRecords.map(teacher=>norm(teacher.name||teacher.fullName||teacher.displayName)).filter(Boolean);
+    const owned=all.filter(c=>{
+      if(window.App?.classTeacherMatches?.(c,teacherId))return true;
+      if(teacherIds.size&&[c.teacherId,c.teacher_id,c.teacherSupabaseId,c.teacherLegacyId].some(value=>teacherIds.has(norm(value))))return true;
+      const classTeacherName=norm(c.teacherName||c.teacher||c.professor||'');
+      return Boolean(classTeacherName&&teacherNames.some(name=>name&&classTeacherName.includes(name)||name.includes(classTeacherName)));
+    });
+    if(owned.length)return sortClassesBySchedule(owned);
+    return source.length&&source.length===all.length?sortClassesBySchedule(all):[];
   }
 
   function nextSession(c){
