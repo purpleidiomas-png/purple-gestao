@@ -617,7 +617,7 @@ const Storage={
   pending:Promise.resolve(),
   baseline:new Map(),
   metadata:new Map(),
-  serialize(row){return JSON.stringify({kind:row.kind,sector:row.sector,owner_id:row.owner_id,data:row.data})},
+  serialize(row){const data=row.kind==='twr_workspace'?{...row.data,filters:{}}:row.data;return JSON.stringify({kind:row.kind,sector:row.sector,owner_id:row.owner_id,data})},
   refreshLocalBaseline(db){
     const rows=this.rows(db);
     this.baseline=new Map(rows.map(row=>[row.id,this.serialize(row)]));
@@ -730,7 +730,7 @@ const Storage={
     add('meeting',db.meetings,x=>x.sector);
     add('student',db.students,()=>State.user.sector);add('class',db.classes,()=>State.user.sector);add('teacher',db.teachers,()=>State.user.sector);
     add('financial_entry',db.financialEntries||[],()=> 'financeiro');
-    if((db.twr||{}).version&&(State.user.role==='direction'||can('twr.manage')))rows.push({id:'twr-workspace',kind:'twr_workspace',sector:'pedagogico',owner_id:owner,data:db.twr});
+    if((db.twr||{}).version&&State.user.role!=='teacher'&&(State.user.role==='direction'||can('twr.manage')))rows.push({id:'twr-workspace',kind:'twr_workspace',sector:'pedagogico',owner_id:this.metadata.get('twr-workspace')?.owner_id||owner,data:{...db.twr,filters:{}}});
     if((db.lessonPlansWorkspace||{}).version)rows.push({id:'lesson-plans-workspace',kind:'lesson_plans_workspace',sector:'pedagogico',owner_id:owner,data:db.lessonPlansWorkspace});
     if(State.user.role==='direction'&&db.teacherCleanupVersion===TEACHERS_CLEAN_VERSION)rows.push({id:'teacher-cleanup-marker',kind:'teacher_cleanup',sector:'pedagogico',owner_id:owner,data:{version:TEACHERS_CLEAN_VERSION,appliedAt:db.teacherCleanupAppliedAt||new Date().toISOString()}});
     if(State.user.role==='direction')rows.push({id:'settings-default',kind:'settings',sector:'all',owner_id:owner,data:db.settings});
@@ -794,8 +794,7 @@ function sanitizeTeacherDb(db,user){
   const studentIds=new Set(safe.classes.flatMap(item=>item.studentIds||[]));
   safe.students=(safe.students||[]).filter(student=>studentIds.has(student.id)||studentIds.has(student.supabaseId)||classIds.has(student.classId)||classIds.has(student.class_id)||(Array.isArray(student.classIds)&&student.classIds.some(id=>classIds.has(id))));
   safe.settings={...(safe.settings||{}),userTeacherLinks:{...(safe.settings?.userTeacherLinks||{}),...(linkedTeacher?.id&&user?.id?{[user.id]:linkedTeacher.id}:{})}};
-  const teamAllowed=['teachers.view','twr.manage','twr.approve','class_opening.manage','lesson_plans.review','lesson_plans.publish','lesson_plans.cycles.manage'].some(key=>user?.permissions?.[key]===true);
-  if(!teamAllowed&&safe.twr){
+  if(safe.twr){
     const owns=item=>teacherIds.includes(catalogMatchToken(item.teacherId||item.teacher_id));
     safe.twr.routines=(safe.twr.routines||[]).filter(owns);
     safe.twr.events=(safe.twr.events||[]).filter(owns);
@@ -3908,14 +3907,15 @@ var TWR_DEFAULT_ACTIVITY_TYPES=[
 ];
 var TWR_TONE_LABELS={class:'Verde aula',makeup:'Coral reposição',planning:'Lilás planejamento',meeting:'Lavanda reunião',training:'Dourado treinamento',trial:'Azul free trial',conversation:'Rosa conversa',support:'Turquesa atendimento',break:'Cinza pausa',blocked:'Vermelho bloqueio',other:'Neutro premium'};
 var TWR_DAY_BY_INDEX=['DOMINGO','SEGUNDA','TERCA','QUARTA','QUINTA','SEXTA','SABADO'];
-function twrCanManage(){return can('twr.manage')||State.user?.role==='direction'}
-function twrCanViewTeam(){return twrCanManage()||canAnyPermission(['twr.approve','class_opening.manage','teachers.view','lesson_plans.review','lesson_plans.publish','lesson_plans.cycles.manage'])}
+function twrCanManage(){return State.user?.role!=='teacher'&&(can('twr.manage')||State.user?.role==='direction')}
+function twrCanViewTeam(){return State.user?.role!=='teacher'&&(twrCanManage()||canAnyPermission(['twr.approve','class_opening.manage','teachers.view','lesson_plans.review','lesson_plans.publish','lesson_plans.cycles.manage']))}
 function twrManualTeacherKey(item){return String(item.email||item.name||item.id||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')}
 function twrActiveTeachers(){
   const teachers=(State.db.teachers||[]).filter(item=>item.active!==false).map(item=>({...item,source:'teacher'}));
   const seen=new Set(teachers.map(twrManualTeacherKey));
   if(State.user?.role==='teacher')(State.db.users||[]).filter(user=>user.active!==false&&user.role==='teacher'&&user.id===State.user.id).forEach(user=>{const key=twrManualTeacherKey(user);if(!resolveTeacherRecordForUser(user)&&!seen.has(key)){seen.add(key);teachers.push({id:user.id,name:user.name,email:user.email,active:true,source:'user'})}});
-  return teachers.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR'));
+  const visible=State.user?.role==='teacher'?teachers.filter(item=>item.id===(resolveTeacherRecordForUser(State.user)?.id||State.user.id)):teachers;
+  return visible.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'pt-BR'));
 }
 function twrTeacherForUser(){const list=twrActiveTeachers(),user=State.user||{},teacherId=resolveTeacherIdForUser(user);return list.find(item=>item.id===teacherId)||list.find(item=>item.email&&user.email&&item.email.toLowerCase()===user.email.toLowerCase())||{id:'teacher-unlinked',name:user.name||'Professor'}}
 function twrSelectedTeacherId(){if(State.user?.role==='teacher'&&!twrCanViewTeam())return twrTeacherForUser().id;const list=twrActiveTeachers();State.twrTeacherId=State.twrTeacherId||list[0]?.id||'';return list.some(item=>item.id===State.twrTeacherId)?State.twrTeacherId:list[0]?.id||''}
@@ -3988,8 +3988,10 @@ function twrActivityOccursOn(item,date){
 }
 function twrProjectedActivities({teacherId='',date='',includeCancelled=false}={}){
   const twr=twrEnsureState(),dates=date?[date]:twrWeekDates(twr.filters.weekOffset).map(item=>item.date),items=[];
+  const ownIds=State.user?.role==='teacher'?teacherIdentityIds(twrTeacherForUser()).map(catalogMatchToken):null;
   const teacherIds=teacherId?teacherIdentityIds(teacherId).map(catalogMatchToken):[];
   dates.forEach(day=>[...(twr.routines||[]).map(item=>[item,'routine']),...(twr.events||[]).map(item=>[item,'event'])].forEach(([item,source])=>{
+    if(ownIds&&!ownIds.includes(catalogMatchToken(item.teacherId)))return;
     if(teacherId&&!teacherIds.includes(catalogMatchToken(item.teacherId)))return;
     if(!twrActivityOccursOn(item,day))return;
     const projected=twrProjectActivity(item,day,source);
@@ -4137,7 +4139,7 @@ function saveTwrActivityFromModal(editId=''){
   twrLogManual(existing?'Editou atividade TWR':'Criou atividade TWR',`${teacherLabelById(teacherId)} • ${twrTypeLabel(type)} • ${start}-${end}`);
   closeModal();twrSaveAndRender('TWR atualizado.');
 }
-function twrFindByOccurrence(id){const raw=String(id||''),base=raw.split('@')[0],date=raw.split('@')[1];return twrProjectedActivities({date}).find(item=>item.occurrenceId===raw||item.id===raw||item.baseId===base)||[...twrEnsureState().routines,...twrEnsureState().events].find(item=>item.id===base)}
+function twrFindByOccurrence(id){const raw=String(id||''),base=raw.split('@')[0],date=raw.split('@')[1],ownIds=State.user?.role==='teacher'?teacherIdentityIds(twrTeacherForUser()).map(catalogMatchToken):null;return twrProjectedActivities({date}).find(item=>item.occurrenceId===raw||item.id===raw||item.baseId===base)||[...twrEnsureState().routines,...twrEnsureState().events].find(item=>item.id===base&&(!ownIds||ownIds.includes(catalogMatchToken(item.teacherId))))}
 function twrOpenLesson(id){
   const item=twrFindByOccurrence(id);if(!item)return toast('Atividade não encontrada.');
   const teacher=twrActiveTeachers().find(t=>t.id===item.teacherId),book=twrBookName(item.bookId,item.manualBookText);
