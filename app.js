@@ -615,6 +615,10 @@ async function refreshIntelligenceSnapshots(){
 
 const Storage={
   pending:Promise.resolve(),
+  revision:0,
+  twrPending:0,
+  twrFailed:false,
+
   baseline:new Map(),
   metadata:new Map(),
   serialize(row){const data=row.kind==='twr_workspace'?{...row.data,filters:{}}:row.data;return JSON.stringify({kind:row.kind,sector:row.sector,owner_id:row.owner_id,data})},
@@ -623,7 +627,7 @@ const Storage={
     this.baseline=new Map(rows.map(row=>[row.id,this.serialize(row)]));
     this.metadata=new Map(rows.map(row=>[row.id,{sector:row.sector,owner_id:row.owner_id}]));
   },
-  async load(){
+  async load({applyBaseline=true}={}){
     if(!hasSupabaseClient())throw new Error('Supabase indisponível para carregamento remoto.');
     const {data:{user},error:userError}=await Supabase.auth.getUser();
     if(userError||!user)throw userError||new Error('Sessão de autenticação não encontrada.');
@@ -682,8 +686,8 @@ const Storage={
       if(row.kind==='notification_reads'&&row.owner_id===profile.id)db.readNotifications=row.data.items||[];
     });
     const writableRows=rows.filter(row=>row.kind!=='case');
-    this.baseline=new Map(writableRows.map(row=>[row.id,this.serialize(row)]));
-    this.metadata=new Map(writableRows.map(row=>[row.id,{sector:row.sector,owner_id:row.owner_id}]));
+    const baseline=new Map(writableRows.map(row=>[row.id,this.serialize(row)]));
+    const metadata=new Map(writableRows.map(row=>[row.id,{sector:row.sector,owner_id:row.owner_id}]));
     const profiles=profile.role==='direction'?(await Supabase.from('profiles').select('*').order('name')).data:[profile];
     if(!migrationApplied)console.warn('Access control migration pending — using legacy safe fallback');
     db.users=(profiles||[]).map(p=>normalizeAccessProfile(p,migrationApplied));
@@ -720,7 +724,10 @@ const Storage={
     if(casesMigrationPending)console.info('Integrated cases privacy migration pending — using direction-only legacy fallback');
     if(!db.inventoryAvailable&&canLoadInventory(profile,migrationApplied))console.warn('Inventory migration pending — module is read-only until database migration is applied');
     const normalizedUser=normalizeAccessProfile(profile,migrationApplied);
-    return {db:applyRoleDataVisibility(db,normalizedUser),user:normalizedUser,empty:!rows.some(row=>['report','action','meeting'].includes(row.kind))&&!db.cases.length};
+    const pendingTwr=readLocalCatalogCache()?.pendingTwr;
+    if(normalizedUser.role!=='teacher'&&(normalizedUser.role==='direction'||normalizedUser.permissions?.['twr.manage'])&&pendingTwr?.userId===normalizedUser.id&&pendingTwr.workspace?.version===TWR_EMPTY_VERSION){db.twr=cloneValue(pendingTwr.workspace);this.twrFailed=true}
+    if(applyBaseline){this.baseline=baseline;this.metadata=metadata}
+    return {db:applyRoleDataVisibility(db,normalizedUser),user:normalizedUser,baseline,metadata,empty:!rows.some(row=>['report','action','meeting'].includes(row.kind))&&!db.cases.length};
   },
   rows(db){
     const owner=State.user.id,sector=appRecordSector(State.user.sector);
@@ -740,7 +747,7 @@ const Storage={
   async sync(db){
     if(!canPersistRemotely())return;
     const rows=this.rows(db);
-    const changed=rows.filter(row=>this.baseline.get(row.id)!==this.serialize(row));
+    const changed=rows.filter(row=>!(this.twrFailed&&row.kind==='twr_workspace')&&this.baseline.get(row.id)!==this.serialize(row));
     if(!changed.length)return;
     for(const row of changed){
       try{await saveAppRecord(row)}
@@ -751,6 +758,7 @@ const Storage={
     }
   },
   remove(id){
+    this.revision++;
     if(!canPersistRemotely()){
       this.baseline.delete(id);
       this.metadata.delete(id);
@@ -761,10 +769,23 @@ const Storage={
     return operation;
   },
   save(db){
+    this.revision++;
     State.db=db;
     if(!canPersistRemotely()){this.refreshLocalBaseline(db);return this.pending}
     const operation=this.pending.then(()=>this.sync(db));
     this.pending=operation.catch(error=>console.error('Purple Gestão — persistência:',error));
+    return operation;
+  },
+  saveTwr(workspace){
+    if(!twrCanManage())return Promise.reject(new Error('Sem permissão para salvar o TWR.'));
+    if(!canPersistRemotely())return Promise.reject(new Error('Sem conexão autenticada com o banco.'));
+    const userId=State.user.id,snapshot=cloneValue(workspace);
+    this.revision++;this.twrPending++;
+    const operation=this.pending.then(async()=>{
+      if(State.user?.id!==userId)throw new Error('A sessão mudou durante o salvamento.');
+      await saveAppRecord({id:'twr-workspace',kind:'twr_workspace',sector:'pedagogico',owner_id:this.metadata.get('twr-workspace')?.owner_id||userId,data:{...snapshot,filters:{}}});
+    }).finally(()=>{this.twrPending--});
+    this.pending=operation.catch(error=>console.error('Purple Gestão — persistência TWR:',error));
     return operation;
   },
   reset(){return defaultDB()}
@@ -1151,7 +1172,7 @@ async function loadSession(){if(window.PurpleAuth?.restoreSession)return window.
 const TeacherAcademicSync={pending:null,lastRead:0,userId:'',bound:false};
 async function refreshTeacherAcademicData({force=false}={}){
   const teacher=State.user?.role==='teacher',teamAgenda=State.user&&State.page==='twr'&&twrCanViewTeam();
-  if((!teacher&&!teamAgenda)||!canPersistRemotely()||document.hidden||document.body.classList.contains('modal-open'))return;
+  if((!teacher&&!teamAgenda)||!canPersistRemotely()||Storage.twrPending||Storage.twrFailed||document.hidden||document.body.classList.contains('modal-open'))return;
   const userId=State.user.id;
   if(TeacherAcademicSync.pending)return TeacherAcademicSync.pending;
   if(!force&&TeacherAcademicSync.userId===userId&&Date.now()-TeacherAcademicSync.lastRead<15000)return;
@@ -1159,8 +1180,11 @@ async function refreshTeacherAcademicData({force=false}={}){
   TeacherAcademicSync.pending=(async()=>{
     try{
       await Storage.pending;
-      const loaded=await Storage.load();
-      if(State.user?.id!==userId||document.body.classList.contains('modal-open'))return;
+      const revision=Storage.revision,pending=Storage.pending;
+      const loaded=await Storage.load({applyBaseline:false});
+      if(State.user?.id!==userId||Storage.revision!==revision||Storage.pending!==pending||Storage.twrPending||Storage.twrFailed||document.body.classList.contains('modal-open'))return;
+      if(loaded.baseline)Storage.baseline=loaded.baseline;
+      if(loaded.metadata)Storage.metadata=loaded.metadata;
       const localTurmas=State.db.settings?.turmas||{},localFilters=State.db.twr?.filters;
       State.user=loaded.user;State.db=loaded.db;
       if(localFilters&&State.db.twr)State.db.twr.filters={...localFilters};
@@ -3969,9 +3993,29 @@ function twrTypeInUse(id){const twr=twrEnsureState();return [...(twr.routines||[
 function twrLogManual(action,detail){const twr=twrEnsureState();twr.history.unshift({id:uid('twr-history'),at:new Date().toISOString(),actor:State.user?.name||'Sistema',action,detail});twr.history=twr.history.slice(0,80)}
 function twrSaveAndRender(message=''){
   writeLocalTwrCache();
-  const sync=Storage.save(State.db);
+  const userId=State.user.id,token=uid('twr-pending');
+  writeLocalCatalogCache({pendingTwr:{userId,token,workspace:cloneValue(State.db.twr)}});
+  const sync=Storage.saveTwr(State.db.twr);
   renderPage();
-  sync.then(()=>{if(message)toast(`${message} Sincronizado para o mobile.`)}).catch(error=>{console.warn('Purple Gestão — TWR ainda não sincronizado com mobile:',error);toast('TWR salvo neste aparelho, mas ainda não apareceu no mobile. Verifique conexão/login e tente salvar novamente.')});
+  sync.then(()=>{
+    if(State.user?.id!==userId)return;
+    if(readLocalCatalogCache()?.pendingTwr?.token===token){writeLocalCatalogCache({pendingTwr:null});Storage.twrFailed=false}
+    if(message)toast(`${message} Confirmado no banco.`);
+    renderPage();
+  }).catch(error=>{
+    console.warn('Purple Gestão — TWR ainda não sincronizado:',error);
+    if(State.user?.id!==userId)return;
+    Storage.twrFailed=true;
+    toast(`TWR ainda não salvo no banco: ${error.message}. Seu registro foi preservado neste aparelho.`);
+    renderPage();
+  });
+  return sync;
+}
+function retryTwrSync(){return twrSaveAndRender('TWR salvo.').catch(()=>{})}
+function twrSyncBanner(){
+  if(Storage.twrPending)return '<section class="panel" role="status"><p>Salvando TWR no banco. Aguarde a confirma\u00e7\u00e3o antes de fechar.</p></section>';
+  if(Storage.twrFailed)return '<section class="panel" role="alert"><p>O TWR ainda n\u00e3o foi salvo no banco. Seus registros est\u00e3o preservados neste aparelho.</p><button class="btn primary small" onclick="App.retryTwrSync()">Tentar salvar novamente</button></section>';
+  return '';
 }
 function twrValidOn(item,date){return (!item.validFrom||item.validFrom<=date)&&(!item.validUntil||item.validUntil>=date)}
 function twrExceptionFor(activityId,date){return (twrEnsureState().exceptions||[]).find(item=>item.activityId===activityId&&item.date===date)}
@@ -4248,7 +4292,7 @@ function renderTWR(){
   if(!twrCanViewTeam()&&!can('panel.view'))return `<div class="page"><div class="empty"><div class="emoji">🔒</div><h3>Acesso restrito</h3></div></div>`;
   const twr=twrEnsureState(),view=twr.filters.view||State.twrTab||'team',teacher=twrSelectedTeacher(),weeks=twrWeekDates(twr.filters.weekOffset),individualSummary=twrSummary(teacher.id),teamSummary=twrTeamSummary(),summary=view==='team'?teamSummary:individualSummary,body=view==='team'?renderTwrDirectorDashboard():view==='today'?renderTwrTodayAdmin():view==='list'?renderTwrListView(teacher):view==='month'?renderTwrMonthView(teacher):view==='find'?renderTwrFindSlot():renderTwrProfessorAdmin(teacher);
   const managementActions=twrCanManage()?`<button class="btn ghost small" onclick="App.twrResetWorkspace()">Limpar TWR</button><button class="btn soft small twr-icon-action" onclick="App.twrOpenActivityTypes()">${appIcon('settings')} Gerenciar tipos</button><button class="btn primary small" onclick="App.twrOpenCreateActivity()">+ Nova atividade</button>`:'';
-  return `<div class="page twr-reference-page"><section class="twr-reference-header"><div><span class="eyebrow">Teacher's Weekly Routine</span><h3>Rotina semanal dos professores</h3><p>Organize as atividades dos professores e acompanhe a carga programada automaticamente.</p></div><div class="twr-header-actions">${managementActions}</div></section>${renderTwrControls(view,teacher,weeks,twr)}${view==='team'||view==='week'?`<section class="twr-admin-metrics">${view==='team'?`${twrDashboardMetric('Carga da equipe',twrMinuteHuman(summary.scheduled),'Soma da equipe')}${twrDashboardMetric('Atividades',fmtNumber(summary.acts.length),'Agenda consolidada')}${twrDashboardMetric('Professores ativos',fmtNumber(summary.activeTeachers),'Com horários na semana')}${twrDashboardMetric('Média por professor',twrMinuteHuman(summary.average),'Carga média semanal')}`:`${twrDashboardMetric('Carga programada',twrMinuteHuman(summary.scheduled),'Soma automática das atividades')}${twrDashboardMetric('Atividades',fmtNumber(twrWeekActivities(teacher.id).length),'Recorrentes + pontuais')}${twrDashboardMetric('Tipos usados',fmtNumber(Object.keys(summary.byType).length),'Categorias na semana')}${twrDashboardMetric('Reposições',twrMinuteHuman(summary.makeup),'Eventos e rotina')}`}</section>`:''}${body}</div>`;
+  return `<div class="page twr-reference-page">${twrSyncBanner()}<section class="twr-reference-header"><div><span class="eyebrow">Teacher's Weekly Routine</span><h3>Rotina semanal dos professores</h3><p>Organize as atividades dos professores e acompanhe a carga programada automaticamente.</p></div><div class="twr-header-actions">${managementActions}</div></section>${renderTwrControls(view,teacher,weeks,twr)}${view==='team'||view==='week'?`<section class="twr-admin-metrics">${view==='team'?`${twrDashboardMetric('Carga da equipe',twrMinuteHuman(summary.scheduled),'Soma da equipe')}${twrDashboardMetric('Atividades',fmtNumber(summary.acts.length),'Agenda consolidada')}${twrDashboardMetric('Professores ativos',fmtNumber(summary.activeTeachers),'Com horários na semana')}${twrDashboardMetric('Média por professor',twrMinuteHuman(summary.average),'Carga média semanal')}`:`${twrDashboardMetric('Carga programada',twrMinuteHuman(summary.scheduled),'Soma automática das atividades')}${twrDashboardMetric('Atividades',fmtNumber(twrWeekActivities(teacher.id).length),'Recorrentes + pontuais')}${twrDashboardMetric('Tipos usados',fmtNumber(Object.keys(summary.byType).length),'Categorias na semana')}${twrDashboardMetric('Reposições',twrMinuteHuman(summary.makeup),'Eventos e rotina')}`}</section>`:''}${body}</div>`;
 }
 
 window.PurpleBookProductionContext={
@@ -4258,6 +4302,7 @@ window.PurpleBookProductionContext={
 };
 
 window.App={
+retryTwrSync,
   fillLogin,login,logout,startApp,toggleSidebar,toggleSidebarMode,changeSector,go,renderPage,toggleNavGroup,toggleNavFlyout,closeNavFlyout,navTriggerKeydown,navFlyoutKeydown,openNavItem,
   openHomeItem,editTask,saveTask,createPurpleIaTask,toggleTask,deleteTask,filterTasks,setTaskFilter,answerPulse,savePulse,setMeetingFilter,
   openNotificationTarget,openPendingDataWorkspace,

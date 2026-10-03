@@ -25,5 +25,11 @@ vm.runInContext(source.slice(source.indexOf('const TeacherAcademicSync='),source
   await ctx.refreshTeacherAcademicData({force:true});
   assert.equal(ctx.State.db.twr.events[0].id,'new-replacement','Administrative TWR receives newly published activities');
   assert.equal(ctx.State.user.role,'leader');
+  let finishRead;
+  ctx.Storage.load=()=>new Promise(resolve=>{finishRead=resolve});
+  const stale=ctx.refreshTeacherAcademicData({force:true});await new Promise(setImmediate);
+  ctx.State.db.twr.events.push({id:'just-saved'});ctx.Storage.revision=1;
+  finishRead({user:admin,db:{classes:[],settings:{},twr:{events:[]}}});await stale;
+  assert(ctx.State.db.twr.events.some(item=>item.id==='just-saved'),'Read started before a save cannot replace the new activity');
   console.log('PASS: fresh assignments, stale detail removal, local filters, throttling, form protection and login switch isolation.');
 })().catch(error=>{console.error(error);process.exitCode=1});
