@@ -1,0 +1,23 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('app.js','utf8');
+let modal=false,loads=0,renders=0;
+const user={id:'teacher-user',role:'teacher'};
+const ctx=vm.createContext({console,Date,State:{user,page:'classes',db:{classes:[{id:'old'}],settings:{turmas:{activeClassId:'old',activeTab:'grades',view:'detail'}},twr:{filters:{view:'list',weekOffset:1}}}},document:{hidden:false,body:{classList:{contains:()=>modal}}},canPersistRemotely:()=>true,resolveTeacherIdForUser:()=>'teacher-record',saveLocalSessionCache(){},renderPage(){renders++},Storage:{pending:Promise.resolve(),async load(){loads++;return {user,db:{classes:[{id:'new'}],settings:{turmas:{activeClassId:'other',view:'list'}},twr:{filters:{view:'team'}}}}}}});
+vm.runInContext(source.slice(source.indexOf('const TeacherAcademicSync='),source.indexOf('function bindTeacherAcademicSync(){')),ctx);
+(async()=>{
+  await ctx.refreshTeacherAcademicData({force:true});
+  assert.equal(ctx.State.db.classes[0].id,'new','Remote reassignment replaces old classes');
+  assert.equal(ctx.State.db.settings.turmas.activeClassId,'','Removed class detail cannot remain open');
+  assert.equal(ctx.State.db.settings.turmas.activeTab,'grades','Local tab selection survives refresh');
+  assert.equal(ctx.State.db.twr.filters.view,'list','Remote administrator filters do not replace local view');
+  assert.equal(ctx.State.db.twr.filters.weekOffset,1);
+  assert.equal(renders,1);
+  await ctx.refreshTeacherAcademicData();assert.equal(loads,1,'Consecutive renders do not flood the backend');
+  modal=true;await ctx.refreshTeacherAcademicData({force:true});assert.equal(loads,1,'Do not overwrite an open form');modal=false;
+  let release;ctx.Storage.load=()=>new Promise(resolve=>{release=resolve});
+  const pending=ctx.refreshTeacherAcademicData({force:true});await new Promise(setImmediate);
+  ctx.State.user={id:'another-user',role:'teacher'};
+  release({user,db:{classes:[{id:'foreign'}]}});await pending;
+  assert.equal(ctx.State.db.classes[0].id,'new','A completed read cannot leak data into a different login');
+  console.log('PASS: fresh assignments, stale detail removal, local filters, throttling, form protection and login switch isolation.');
+})().catch(error=>{console.error(error);process.exitCode=1});
