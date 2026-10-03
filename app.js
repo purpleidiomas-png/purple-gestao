@@ -730,9 +730,9 @@ const Storage={
     add('meeting',db.meetings,x=>x.sector);
     add('student',db.students,()=>State.user.sector);add('class',db.classes,()=>State.user.sector);add('teacher',db.teachers,()=>State.user.sector);
     add('financial_entry',db.financialEntries||[],()=> 'financeiro');
-    if((db.twr||{}).version)rows.push({id:'twr-workspace',kind:'twr_workspace',sector:'pedagogico',owner_id:owner,data:db.twr});
+    if((db.twr||{}).version&&(State.user.role==='direction'||can('twr.manage')))rows.push({id:'twr-workspace',kind:'twr_workspace',sector:'pedagogico',owner_id:owner,data:db.twr});
     if((db.lessonPlansWorkspace||{}).version)rows.push({id:'lesson-plans-workspace',kind:'lesson_plans_workspace',sector:'pedagogico',owner_id:owner,data:db.lessonPlansWorkspace});
-    if(db.teacherCleanupVersion===TEACHERS_CLEAN_VERSION)rows.push({id:'teacher-cleanup-marker',kind:'teacher_cleanup',sector:'pedagogico',owner_id:owner,data:{version:TEACHERS_CLEAN_VERSION,appliedAt:db.teacherCleanupAppliedAt||new Date().toISOString()}});
+    if(State.user.role==='direction'&&db.teacherCleanupVersion===TEACHERS_CLEAN_VERSION)rows.push({id:'teacher-cleanup-marker',kind:'teacher_cleanup',sector:'pedagogico',owner_id:owner,data:{version:TEACHERS_CLEAN_VERSION,appliedAt:db.teacherCleanupAppliedAt||new Date().toISOString()}});
     if(State.user.role==='direction')rows.push({id:'settings-default',kind:'settings',sector:'all',owner_id:owner,data:db.settings});
     rows.push({id:`notification-reads-${owner}`,kind:'notification_reads',sector,owner_id:owner,data:{items:db.readNotifications}});
     return rows;
@@ -791,7 +791,8 @@ function sanitizeTeacherDb(db,user){
   safe.users=(safe.users||[]).filter(item=>item.role==='teacher'||(item.sector==='pedagogico'&&item.role==='leader')||item.id===user?.id).map(item=>({id:item.id,name:item.name,email:item.id===user?.id?item.email:'',role:item.role,sector:item.sector,active:item.active,teacherId:item.teacherId||item.teacher_id||links[item.id]||''}));
   safe.classes=(safe.classes||[]).filter(teacherOwnsClass);
   const classIds=new Set(safe.classes.flatMap(item=>[item.id,item.supabaseId,item.legacyId]).filter(Boolean));
-  safe.students=(safe.students||[]).filter(student=>classIds.has(student.classId)||classIds.has(student.class_id)||(Array.isArray(student.classIds)&&student.classIds.some(id=>classIds.has(id))));
+  const studentIds=new Set(safe.classes.flatMap(item=>item.studentIds||[]));
+  safe.students=(safe.students||[]).filter(student=>studentIds.has(student.id)||studentIds.has(student.supabaseId)||classIds.has(student.classId)||classIds.has(student.class_id)||(Array.isArray(student.classIds)&&student.classIds.some(id=>classIds.has(id))));
   safe.settings={...(safe.settings||{}),userTeacherLinks:{...(safe.settings?.userTeacherLinks||{}),...(linkedTeacher?.id&&user?.id?{[user.id]:linkedTeacher.id}:{})}};
   const teamAllowed=['teachers.view','twr.manage','twr.approve','class_opening.manage','lesson_plans.review','lesson_plans.publish','lesson_plans.cycles.manage'].some(key=>user?.permissions?.[key]===true);
   if(!teamAllowed&&safe.twr){
