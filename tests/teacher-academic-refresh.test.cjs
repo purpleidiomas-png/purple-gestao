@@ -19,5 +19,11 @@ vm.runInContext(source.slice(source.indexOf('const TeacherAcademicSync='),source
   ctx.State.user={id:'another-user',role:'teacher'};
   release({user,db:{classes:[{id:'foreign'}]}});await pending;
   assert.equal(ctx.State.db.classes[0].id,'new','A completed read cannot leak data into a different login');
+  const admin={id:'anna',role:'leader'};
+  ctx.State.user=admin;ctx.State.page='twr';ctx.twrCanViewTeam=()=>true;
+  ctx.Storage.load=async()=>({user:admin,db:{classes:[],settings:{turmas:{}},twr:{events:[{id:'new-replacement'}]}}});
+  await ctx.refreshTeacherAcademicData({force:true});
+  assert.equal(ctx.State.db.twr.events[0].id,'new-replacement','Administrative TWR receives newly published activities');
+  assert.equal(ctx.State.user.role,'leader');
   console.log('PASS: fresh assignments, stale detail removal, local filters, throttling, form protection and login switch isolation.');
 })().catch(error=>{console.error(error);process.exitCode=1});

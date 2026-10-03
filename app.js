@@ -2,7 +2,7 @@
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const AUTH_CONFIG=window.PurpleAuthConfig||{};
 const APP_VERSION=AUTH_CONFIG.appVersion||'1.13.55-grade-flow';
-const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v388';
+const SW_VERSION=AUTH_CONFIG.serviceWorkerVersion||'purple-gestao-v391';
 const MANIFEST_VERSION=AUTH_CONFIG.manifestVersion||document.querySelector('link[rel="manifest"]')?.getAttribute('href')||'manifest.webmanifest';
 const SUPABASE_URL=AUTH_CONFIG.supabaseUrl||'https://qqlymzyvvgmbyuhswipp.supabase.co';
 const SUPABASE_KEY=AUTH_CONFIG.supabaseKey||'sb_publishable_3E5BMGRcfKRt0MBFXPTfwg_lexboTMm';
@@ -1151,7 +1151,8 @@ async function logout(){if(window.PurpleAuth?.logout)return window.PurpleAuth.lo
 async function loadSession(){if(window.PurpleAuth?.restoreSession)return window.PurpleAuth.restoreSession();if(!hasSupabaseClient())throw new Error('Supabase indisponível para restauração de sessão.');const loaded=await Storage.load();if(!loaded.user.active)throw new Error('Usuário inativo');State.user=loaded.user;State.db=applyRoleDataVisibility(loaded.db,loaded.user);State.sector=State.user.accessScope==='all_sectors'?'integrado':State.user.sector;Bootstrap.loginState='session-loaded';if(Bootstrap.teacherDirectoryReset){Bootstrap.teacherDirectoryReset=false;await applyTeacherDirectoryReset().catch(error=>console.warn('Purple Gestão — limpeza inicial dos professores:',error))}if(Bootstrap.twrWorkspaceReset){Bootstrap.twrWorkspaceReset=false;await Storage.save(State.db).catch(error=>console.warn('Purple Gestão — limpeza inicial do TWR:',error))}await cleanupClassesExceptDiscover3({silent:true});await flushMergedLocalCachesToRemote({silent:true});await syncAutomaticTasks();await unlockAchievements();window.PurpleAuth?.savePersistedSession?.();saveLocalSessionCache();startApp()}
 const TeacherAcademicSync={pending:null,lastRead:0,userId:'',bound:false};
 async function refreshTeacherAcademicData({force=false}={}){
-  if(State.user?.role!=='teacher'||!canPersistRemotely()||document.hidden||document.body.classList.contains('modal-open'))return;
+  const teacher=State.user?.role==='teacher',teamAgenda=State.user&&State.page==='twr'&&twrCanViewTeam();
+  if((!teacher&&!teamAgenda)||!canPersistRemotely()||document.hidden||document.body.classList.contains('modal-open'))return;
   const userId=State.user.id;
   if(TeacherAcademicSync.pending)return TeacherAcademicSync.pending;
   if(!force&&TeacherAcademicSync.userId===userId&&Date.now()-TeacherAcademicSync.lastRead<15000)return;
@@ -3929,6 +3930,15 @@ function twrBookName(id,manual=''){const book=twrBooks().find(item=>item.id===id
 function twrSeedManualRoutines(twr){
   return twr;
 }
+function twrSessionFilters(){
+  const userId=State.user?.id||'anonymous',team=twrCanViewTeam();
+  if(State.twrViewUserId!==userId||State.twrViewCanTeam!==team){
+    State.twrViewUserId=userId;
+    State.twrViewCanTeam=team;
+    State.twrViewFilters={view:team?'team':'week',type:'all',day:'all',weekOffset:0,teamNextPage:0};
+  }
+  return State.twrViewFilters;
+}
 function twrEnsureState(){
   State.db.twr=State.db.twr||{};
   if(State.db.twr.version!==TWR_EMPTY_VERSION)State.db.twr={version:TWR_EMPTY_VERSION,routines:[],events:[],exceptions:[],workWindows:[],history:[],notifications:[],filters:{}};
@@ -3946,7 +3956,8 @@ function twrEnsureState(){
     const fallback=TWR_DEFAULT_ACTIVITY_TYPES.find(type=>type.id===item.id)||{};
     return {id:item.id||uid('twr-type'),label:item.label||fallback.label||TWR_MANUAL_TYPES[item.id]||'Tipo',tone:item.tone||fallback.tone||TWR_TYPE_TONE[item.id]||'other',description:item.description||fallback.description||'',active:item.active!==false,system:item.system!==false&&Boolean(TWR_MANUAL_TYPES[item.id]),order:Number.isFinite(Number(item.order))?Number(item.order):index};
   }).sort((a,b)=>Number(a.order||0)-Number(b.order||0)||String(a.label||'').localeCompare(String(b.label||''),'pt-BR'));
-  twr.filters={view:'week',type:'all',day:'all',weekOffset:0,findDate:todayISO(),findStart:'14:00',findEnd:'15:00',findDuration:60,...(twr.filters||{})};
+  twr.filters={findDate:todayISO(),findStart:'14:00',findEnd:'15:00',findDuration:60,...twrSessionFilters()};
+  State.twrViewFilters=twr.filters;
   if(twr.filters.view==='teacher')twr.filters.view='week';
   return twr;
 }

@@ -13,12 +13,12 @@ assert(index.includes('core/ui-service.js'), 'index.html deve carregar core/ui-s
 assert(sw.includes('core/supabase-service.js'), 'service worker deve versionar core/supabase-service.js');
 assert(sw.includes('core/ui-service.js'), 'service worker deve versionar core/ui-service.js');
 assert(sw.includes('networkFirst(request)'), 'service worker deve usar network-first para arquivos críticos');
-assert(config.includes('purple-gestao-v388'), 'auth/config.js deve apontar para cache v345');
-assert(app.includes('purple-gestao-v388'), 'app.js deve possuir fallback de cache compatível');
-assert(index.includes('auth/config.js?v=195'), 'index.html deve apontar para config v169');
+assert(config.includes('purple-gestao-v391'), 'auth/config.js deve apontar para cache v345');
+assert(app.includes('purple-gestao-v391'), 'app.js deve possuir fallback de cache compatível');
+assert(index.includes('auth/config.js?v=198'), 'index.html deve apontar para config v169');
 assert(index.includes('auth/bootstrap.js?v=16'), 'index.html deve apontar para bootstrap v16');
-assert(index.includes('app.js?v=305'), 'index.html deve apontar para app v271');
-assert(sw.includes('app.js?v=305'), 'service worker deve versionar app v271');
+assert(index.includes('app.js?v=308'), 'index.html deve apontar para app v271');
+assert(sw.includes('app.js?v=308'), 'service worker deve versionar app v271');
 assert(index.includes('styles.css?v=253'), 'index.html deve apontar para styles v253');
 assert(index.includes('core/ui-service.js?v=2'), 'index.html deve apontar para ui-service v2');
 assert(index.includes('modules/financial-center.js?v=2'), 'index.html deve carregar a central financeira antes do app');
