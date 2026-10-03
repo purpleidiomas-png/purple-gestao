@@ -18,7 +18,9 @@ const h=require('./shadow/phase2_2_harness.js');
       ['teach-1789671634306-f04e24','teacher',{id:'teach-1789671634306-f04e24',name:'DAYANA NASCIMENTO',supabaseId:'dayana-uuid'}],
       ['settings','settings',{userTeacherLinks:{[dayanaId]:'teach-1789672187882-1180ac'}}],
       ['a','class',{teacherId:'teach-1789672187882-1180ac'}],
-      ['d','class',{teacherId:'dayana-uuid'}]
+      ['d','class',{teacherId:'dayana-uuid'}],
+      ['student-a','student',{classId:'a'}],
+      ['student-d','student',{classId:'d'}]
     ];
     for(const [id,kind,data] of records)await db.query('insert into app_records(id,kind,sector,data) values($1,$2,$3,$4)',[id,kind,'pedagogico',data]);
     await db.query('grant usage on schema auth to authenticated');
@@ -28,6 +30,8 @@ const h=require('./shadow/phase2_2_harness.js');
     assert.deepEqual(await classes(dayana),[],'Reproduce own class hidden when reports.view is false');
     await db.query(fs.readFileSync('supabase/migrations/20261003_teacher_identity_class_scope.sql','utf8'));
     assert.deepEqual(await classes(ana),['a']);assert.deepEqual(await classes(dayana),['d']);
+    assert.deepEqual((await ana.query("select id from app_records where kind='student'")).rows.map(r=>r.id),['student-a']);
+    assert.deepEqual((await dayana.query("select id from app_records where kind='student'")).rows.map(r=>r.id),['student-d']);
     assert.equal((await dayana.query("update app_records set data=data||'{\"notes\":\"foreign\"}'::jsonb where id='a' returning id")).rows.length,0);
     assert.equal((await dayana.query("delete from app_records where id='a' returning id")).rows.length,0);
     await db.query("update app_records set data=jsonb_set(data,'{teacherId}','\"teach-1789672187882-1180ac\"') where id='d'");

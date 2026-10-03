@@ -1,0 +1,13 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('app.js','utf8'),start=source.indexOf('  rows(db){'),end=source.indexOf('  async sync(db){',start);
+const ctx=vm.createContext({State:{user:{id:'u',role:'teacher',sector:'pedagogico'}},can:()=>false,canAnyPermission:()=>false,appRecordSector:value=>value,isUUID:()=>false,TEACHERS_CLEAN_VERSION:'test'});
+vm.runInContext('const writer={'+source.slice(start,end)+'}; globalThis.writer=writer;',ctx);
+ctx.writer.metadata=new Map();
+const db={reports:[],actions:[],meetings:[],students:[],classes:[{id:'own'}],teachers:[],financialEntries:[],twr:{version:'manual-empty-v2',routines:[{teacherId:'own'}]},teacherCleanupVersion:'test',settings:{},readNotifications:[]};
+let rows=ctx.writer.rows(db);
+assert(!rows.some(r=>r.kind==='twr_workspace'),'Saving attendance must not overwrite the shared TWR with an own-only projection');
+assert(!rows.some(r=>r.kind==='teacher_cleanup'));
+assert(rows.some(r=>r.kind==='class'),'Own class updates remain available');
+ctx.State.user.role='direction';rows=ctx.writer.rows(db);
+assert(rows.some(r=>r.kind==='twr_workspace'),'Direction can persist the full workspace');
+console.log('PASS: own-only TWR stays read-only during academic saves; own class and director saves remain available.');

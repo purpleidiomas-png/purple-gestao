@@ -79,4 +79,31 @@ drop policy if exists teacher_own_classes_read on public.app_records;
 create policy teacher_own_classes_read on public.app_records for select to authenticated
 using (kind='class' and public.has_permission('classes.view') and public.teacher_owns_class(data));
 
+create or replace function public.teacher_owns_student(student_id text,student_data jsonb)
+returns boolean
+language sql stable security definer
+set search_path=public
+as $$
+  select exists(
+    select 1 from public.app_records c
+    where c.kind='class' and public.teacher_owns_class(c.data)
+      and (c.id=student_data->>'classId' or c.id=student_data->>'class_id'
+        or coalesce(student_data->'classIds','[]'::jsonb) ? c.id
+        or coalesce(c.data->'studentIds','[]'::jsonb) ? student_id)
+  );
+$$;
+revoke all on function public.teacher_owns_student(text,jsonb) from public;
+grant execute on function public.teacher_owns_student(text,jsonb) to authenticated;
+
+drop policy if exists teacher_student_scope on public.app_records;
+create policy teacher_student_scope on public.app_records
+as restrictive for select to authenticated
+using (kind<>'student'
+  or not exists(select 1 from public.profiles where id=auth.uid() and role='teacher')
+  or public.teacher_owns_student(id,data));
+
+drop policy if exists teacher_own_students_read on public.app_records;
+create policy teacher_own_students_read on public.app_records for select to authenticated
+using (kind='student' and public.has_permission('classes.view') and public.teacher_owns_student(id,data));
+
 commit;
